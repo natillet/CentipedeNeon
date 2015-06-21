@@ -29,8 +29,16 @@
 */
  
 Centipede CS; // create Centipede object
+const int MAX_LIGHTS = 64;
+//const long MAX_LIGHT_BIN = ; //2^MAX_LIGHTS
 
-typedef enum display
+typedef enum
+{
+  LEFT = 0,
+  RIGHT
+} displayDirection_t;
+
+typedef enum
 {
   ALL_BLINK = 0,
   WAVE_X_ON_Y_OFF,
@@ -49,7 +57,12 @@ typedef enum display
 //Potentiometer sets speed
 //Button for direction
 //Button for display program
- 
+
+int delay_ms = 100;
+display_t active_program = WAVE_X_ON_Y_OFF; //ALL_BLINK;
+displayDirection_t displayDirection = LEFT;
+int global_x = 2;
+int global_y = 4;
  
 void setup()
 {
@@ -58,7 +71,9 @@ void setup()
   CS.initialize(); // set all registers to default
  
   CS.portMode(0, 0b0000000000000000); // set all pins on chip 0 to output (0 to 15)
-  //CS.portMode(0, 0b0000000000000000); // set all pins on chip 1 to output (16 to 31)
+  CS.portMode(1, 0b0000000000000000); // set all pins on chip 1 to output (16 to 31)
+  CS.portMode(2, 0b0000000000000000); // set all pins on chip 2 to output (32 to 47)
+  CS.portMode(3, 0b0000000000000000); // set all pins on chip 3 to output (48 to 63)
  
   //TWBR = 12; // uncomment for 400KHz I2C (on 16MHz Arduinos)
  
@@ -66,15 +81,134 @@ void setup()
  
 
 void loop()
-{  
-  for (int i = 0; i < 16; i++) {
-    CS.digitalWrite(i, HIGH);
-    delay(10);
+{
+  //read ADC
+  
+  //choose program to display
+  switch(active_program)
+  {
+    case ALL_BLINK:
+      blink();
+      break;
+    case WAVE_X_ON_Y_OFF:
+      wave(global_x, global_y);
+      break;
+    case STEP_X_ON_Y_OFF:
+      break;
+    case STACK:
+      break;
+    case RANDOM_RAND_ON:
+      break;
+    case RANDOM_X_ON:
+      break;
+    case MAX_DISPLAY: //fall through
+    default:
+      active_program = ALL_BLINK;
+      break;
   }
- 
-  for (int i = 0; i < 16; i++) {
-    CS.digitalWrite(i, LOW);
-    delay(10);
-  } 
 }
+
+//// DISPLAY PROGRAMS ////
+void blink(void)
+{
+  static bool turnOn = true;
+  if (turnOn)
+  {
+    CS.portWrite(0, 0xFFFF);
+    CS.portWrite(1, 0xFFFF);
+    CS.portWrite(2, 0xFFFF);
+    CS.portWrite(3, 0xFFFF);
+    turnOn = false;
+  }
+  else
+  {
+    CS.portWrite(0, 0);
+    CS.portWrite(1, 0);
+    CS.portWrite(2, 0);
+    CS.portWrite(3, 0);
+    turnOn = true;
+  }
+  delay(delay_ms*10);
+}
+
+void wave(int x_in, int y_in)
+{
+  static int snake0 = 0;
+  static int snake1 = 0;
+  static int snake2 = 0;
+  static int snake3 = 0;
+  static int x = 0;
+  static int y = 0;
+  static bool turnOn = true;
+  if (turnOn)
+  {
+    if (x < x_in)
+    {
+      x++;
+      if (LEFT == displayDirection)
+      {
+        snake3 = (snake3 << 1) + ((snake2 & 0x080) >> 8);
+        snake2 = (snake2 << 1) + ((snake1 & 0x080) >> 8);
+        snake1 = (snake1 << 1) + ((snake0 & 0x080) >> 8);
+        snake0 = (snake0 << 1) + 1;
+      }
+      else
+      {
+        snake0 = (snake0 >> 1) + ((snake1 & 0x01) << 8);
+        snake1 = (snake1 >> 1) + ((snake2 & 0x01) << 8);
+        snake2 = (snake2 >> 1) + ((snake3 & 0x01) << 8);
+        snake3 = (snake3 >> 1) + 0x80;
+      }
+    }
+    else
+    {
+      turnOn = false;
+      x = 0;
+    }
+  }
+  else
+  {
+    if (y < y_in)
+    {
+      y++;
+      if (LEFT == displayDirection)
+      {
+        snake3 = (snake3 << 1) + (snake2 & 0x80);
+        snake2 = (snake2 << 1) + (snake1 & 0x80);
+        snake1 = (snake1 << 1) + (snake0 & 0x80);
+        snake0 = (snake0 << 1);
+      }
+      else
+      {
+        snake0 = (snake0 >> 1) + ((snake1 & 0x01) << 8);
+        snake1 = (snake1 >> 1) + ((snake2 & 0x01) << 8);
+        snake2 = (snake2 >> 1) + ((snake3 & 0x01) << 8);
+        snake3 = (snake3 >> 1);
+      }
+    }
+    else
+    {
+      turnOn = true;
+      y = 0;
+    }
+  }
+  
+  CS.portWrite(0, snake0);
+  CS.portWrite(1, snake1);
+  CS.portWrite(2, snake2);
+  CS.portWrite(3, snake3);
+  delay(delay_ms);
+}
+
+
+
+//  for (int i = 0; i < MAX_LIGHTS; i++) {
+//    CS.digitalWrite(i, HIGH);
+//    delay(delay_ms);
+//  }
+// 
+//  for (int i = 0; i < MAX_LIGHTS; i++) {
+//    CS.digitalWrite(i, LOW);
+//    delay(delay_ms);
+//  }
 
