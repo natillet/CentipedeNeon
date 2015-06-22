@@ -27,10 +27,6 @@
   CS.pinPullup(1,HIGH);
   CS.portPullup(0, 0b0111111001111110); // 0 = no pullup, 1 = pullup
 */
- 
-Centipede CS; // create Centipede object
-const int MAX_LIGHTS = 64;
-//const long MAX_LIGHT_BIN = ; //2^MAX_LIGHTS
 
 typedef enum
 {
@@ -41,28 +37,29 @@ typedef enum
 typedef enum
 {
   ALL_BLINK = 0,
-  WAVE_X_ON_Y_OFF,
-  STEP_X_ON_Y_OFF,
-  STACK,
-  RANDOM_RAND_ON,
-  RANDOM_X_ON,
+  WAVE_X_ON_Y_OFF,      //wave - groups of X travelling as a snake (Y blank between to get so far as to have a single X snake at a time)
+  STEP_X_ON_Y_OFF,      //steps - group of X stepping to next group of X (Y blank between)
+  STACK,                //stacking - one light travels to the end and stays, then another travels to the second to the end and stays, etc.
+  RANDOM_X_ON,          //randomized - max of X on at a time
   MAX_DISPLAY
 } display_t;
-//Programs
-//wave - groups of X travelling as a snake (Y blank between to get so far as to have a single X snake at a time)
-//randomized - max of X on at a time
-//steps - group of X stepping to next group of X (Y blank between)
-//stacking - one light travels to the end and stays, then another travels to the second to the end and stays, etc.
+
+//prototypes after enums
+void wave(int x_in, int y_in, displayDirection_t dir_in);
 
 //Potentiometer sets speed
 //Button for direction
 //Button for display program
+//X, Y adjust?
+
+Centipede CS; // create Centipede object
+const int MAX_LIGHTS = 64;
 
 int delay_ms = 100;
 display_t active_program = WAVE_X_ON_Y_OFF; //ALL_BLINK;
-displayDirection_t displayDirection = LEFT;
-int global_x = 2;
-int global_y = 4;
+displayDirection_t displayDirection = RIGHT;
+int global_x = 1;
+int global_y = 1;
  
 void setup()
 {
@@ -91,13 +88,12 @@ void loop()
       blink();
       break;
     case WAVE_X_ON_Y_OFF:
-      wave(global_x, global_y);
+      wave(global_x, global_y, displayDirection);
       break;
     case STEP_X_ON_Y_OFF:
+      stepping(global_x, global_y);
       break;
     case STACK:
-      break;
-    case RANDOM_RAND_ON:
       break;
     case RANDOM_X_ON:
       break;
@@ -131,7 +127,7 @@ void blink(void)
   delay(delay_ms*10);
 }
 
-void wave(int x_in, int y_in)
+void wave(int x_in, int y_in, displayDirection_t dir_in)
 {
   static int snake0 = 0;
   static int snake1 = 0;
@@ -140,24 +136,34 @@ void wave(int x_in, int y_in)
   static int x = 0;
   static int y = 0;
   static bool turnOn = true;
+  static displayDirection_t dir = RIGHT;
+  if (dir != dir_in)
+  {
+    dir = dir_in;
+    //reset snake so it doesn't look wonky
+    snake0 = 0;
+    snake1 = 0;
+    snake2 = 0;
+    snake3 = 0;
+  }
   if (turnOn)
   {
     if (x < x_in)
     {
       x++;
-      if (LEFT == displayDirection)
+      if (LEFT == dir)
       {
-        snake3 = (snake3 << 1) + ((snake2 & 0x080) >> 8);
-        snake2 = (snake2 << 1) + ((snake1 & 0x080) >> 8);
-        snake1 = (snake1 << 1) + ((snake0 & 0x080) >> 8);
+        snake3 = (snake3 << 1) + ((snake2 & 0x08000) == 0x08000);
+        snake2 = (snake2 << 1) + ((snake1 & 0x08000) == 0x08000);
+        snake1 = (snake1 << 1) + ((snake0 & 0x08000) == 0x08000);
         snake0 = (snake0 << 1) + 1;
       }
       else
       {
-        snake0 = (snake0 >> 1) + ((snake1 & 0x01) << 8);
-        snake1 = (snake1 >> 1) + ((snake2 & 0x01) << 8);
-        snake2 = (snake2 >> 1) + ((snake3 & 0x01) << 8);
-        snake3 = (snake3 >> 1) + 0x80;
+        snake0 = (snake0 >> 1) + ((snake1 & 0x01) << 15);
+        snake1 = (snake1 >> 1) + ((snake2 & 0x01) << 15);
+        snake2 = (snake2 >> 1) + ((snake3 & 0x01) << 15);
+        snake3 = (snake3 >> 1) + 0x08000;
       }
     }
     else
@@ -171,18 +177,18 @@ void wave(int x_in, int y_in)
     if (y < y_in)
     {
       y++;
-      if (LEFT == displayDirection)
+      if (LEFT == dir)
       {
-        snake3 = (snake3 << 1) + (snake2 & 0x80);
-        snake2 = (snake2 << 1) + (snake1 & 0x80);
-        snake1 = (snake1 << 1) + (snake0 & 0x80);
+        snake3 = (snake3 << 1) + ((snake2 & 0x08000) == 0x08000);
+        snake2 = (snake2 << 1) + ((snake1 & 0x08000) == 0x08000);
+        snake1 = (snake1 << 1) + ((snake0 & 0x08000) == 0x08000);
         snake0 = (snake0 << 1);
       }
       else
       {
-        snake0 = (snake0 >> 1) + ((snake1 & 0x01) << 8);
-        snake1 = (snake1 >> 1) + ((snake2 & 0x01) << 8);
-        snake2 = (snake2 >> 1) + ((snake3 & 0x01) << 8);
+        snake0 = (snake0 >> 1) + ((snake1 & 0x01) << 15);
+        snake1 = (snake1 >> 1) + ((snake2 & 0x01) << 15);
+        snake2 = (snake2 >> 1) + ((snake3 & 0x01) << 15);
         snake3 = (snake3 >> 1);
       }
     }
@@ -200,15 +206,63 @@ void wave(int x_in, int y_in)
   delay(delay_ms);
 }
 
+void stepping(int x_in, int y_in)
+{
+  static int snake0 = 0;
+  static int snake1 = 0;
+  static int snake2 = 0;
+  static int snake3 = 0;
+  static int x = 0;
+  static int y = 0;
+  static bool turnOn = true;
+  if (turnOn)
+  {
+    for (x = 0; x < x_in; x++)
+    {
+      if (LEFT == displayDirection)
+      {
+        snake3 = (snake3 << 1) + ((snake2 & 0x080) >> 8);
+        snake2 = (snake2 << 1) + ((snake1 & 0x080) >> 8);
+        snake1 = (snake1 << 1) + ((snake0 & 0x080) >> 8);
+        snake0 = (snake0 << 1) + 1;
+      }
+      else
+      {
+        snake0 = (snake0 >> 1) + ((snake1 & 0x01) << 8);
+        snake1 = (snake1 >> 1) + ((snake2 & 0x01) << 8);
+        snake2 = (snake2 >> 1) + ((snake3 & 0x01) << 8);
+        snake3 = (snake3 >> 1) + 0x80;
+      }
+    }
+    turnOn = false;
+  }
+  else
+  {
+    for (y = 0; y < y_in; y++)
+    {
+      if (LEFT == displayDirection)
+      {
+        snake3 = (snake3 << 1) + (snake2 & 0x80);
+        snake2 = (snake2 << 1) + (snake1 & 0x80);
+        snake1 = (snake1 << 1) + (snake0 & 0x80);
+        snake0 = (snake0 << 1);
+      }
+      else
+      {
+        snake0 = (snake0 >> 1) + ((snake1 & 0x01) << 8);
+        snake1 = (snake1 >> 1) + ((snake2 & 0x01) << 8);
+        snake2 = (snake2 >> 1) + ((snake3 & 0x01) << 8);
+        snake3 = (snake3 >> 1);
+      }
+    }
+    turnOn = true;
+  }
+  
+  CS.portWrite(0, snake0);
+  CS.portWrite(1, snake1);
+  CS.portWrite(2, snake2);
+  CS.portWrite(3, snake3);
+  delay(delay_ms);
+}
 
-
-//  for (int i = 0; i < MAX_LIGHTS; i++) {
-//    CS.digitalWrite(i, HIGH);
-//    delay(delay_ms);
-//  }
-// 
-//  for (int i = 0; i < MAX_LIGHTS; i++) {
-//    CS.digitalWrite(i, LOW);
-//    delay(delay_ms);
-//  }
 
