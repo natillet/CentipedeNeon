@@ -46,6 +46,8 @@ typedef enum
 
 //prototypes after enums
 void wave(int x_in, int y_in, displayDirection_t dir_in);
+void stepping(int x_in, int y_in, displayDirection_t dir_in);
+void stack(displayDirection_t dir_in);
 
 //Potentiometer sets speed
 //Button for direction
@@ -56,10 +58,10 @@ Centipede CS; // create Centipede object
 const int MAX_LIGHTS = 64;
 
 int delay_ms = 100;
-display_t active_program = WAVE_X_ON_Y_OFF; //ALL_BLINK;
-displayDirection_t displayDirection = RIGHT;
-int global_x = 1;
-int global_y = 1;
+display_t active_program = STEP_X_ON_Y_OFF; //ALL_BLINK;
+displayDirection_t displayDirection = LEFT;
+int global_x = 3;
+int global_y = 2;
  
 void setup()
 {
@@ -91,7 +93,7 @@ void loop()
       wave(global_x, global_y, displayDirection);
       break;
     case STEP_X_ON_Y_OFF:
-      stepping(global_x, global_y);
+      stepping(global_x, global_y, displayDirection);
       break;
     case STACK:
       break;
@@ -136,7 +138,7 @@ void wave(int x_in, int y_in, displayDirection_t dir_in)
   static int x = 0;
   static int y = 0;
   static bool turnOn = true;
-  static displayDirection_t dir = RIGHT;
+  static displayDirection_t dir = LEFT;
   if (dir != dir_in)
   {
     dir = dir_in;
@@ -206,7 +208,7 @@ void wave(int x_in, int y_in, displayDirection_t dir_in)
   delay(delay_ms);
 }
 
-void stepping(int x_in, int y_in)
+void stepping(int x_in, int y_in, displayDirection_t dir_in)
 {
   static int snake0 = 0;
   static int snake1 = 0;
@@ -215,23 +217,33 @@ void stepping(int x_in, int y_in)
   static int x = 0;
   static int y = 0;
   static bool turnOn = true;
+  static displayDirection_t dir = LEFT;
+  if (dir != dir_in)
+  {
+    dir = dir_in;
+    //reset snake so it doesn't look wonky
+    snake0 = 0;
+    snake1 = 0;
+    snake2 = 0;
+    snake3 = 0;
+  }
   if (turnOn)
   {
     for (x = 0; x < x_in; x++)
     {
-      if (LEFT == displayDirection)
+      if (LEFT == dir)
       {
-        snake3 = (snake3 << 1) + ((snake2 & 0x080) >> 8);
-        snake2 = (snake2 << 1) + ((snake1 & 0x080) >> 8);
-        snake1 = (snake1 << 1) + ((snake0 & 0x080) >> 8);
+        snake3 = (snake3 << 1) + ((snake2 & 0x08000) == 0x08000);
+        snake2 = (snake2 << 1) + ((snake1 & 0x08000) == 0x08000);
+        snake1 = (snake1 << 1) + ((snake0 & 0x08000) == 0x08000);
         snake0 = (snake0 << 1) + 1;
       }
       else
       {
-        snake0 = (snake0 >> 1) + ((snake1 & 0x01) << 8);
-        snake1 = (snake1 >> 1) + ((snake2 & 0x01) << 8);
-        snake2 = (snake2 >> 1) + ((snake3 & 0x01) << 8);
-        snake3 = (snake3 >> 1) + 0x80;
+        snake0 = (snake0 >> 1) + ((snake1 & 0x01) << 15);
+        snake1 = (snake1 >> 1) + ((snake2 & 0x01) << 15);
+        snake2 = (snake2 >> 1) + ((snake3 & 0x01) << 15);
+        snake3 = (snake3 >> 1) + 0x08000;
       }
     }
     turnOn = false;
@@ -240,22 +252,92 @@ void stepping(int x_in, int y_in)
   {
     for (y = 0; y < y_in; y++)
     {
-      if (LEFT == displayDirection)
+      if (LEFT == dir)
       {
-        snake3 = (snake3 << 1) + (snake2 & 0x80);
-        snake2 = (snake2 << 1) + (snake1 & 0x80);
-        snake1 = (snake1 << 1) + (snake0 & 0x80);
+        snake3 = (snake3 << 1) + ((snake2 & 0x08000) == 0x08000);
+        snake2 = (snake2 << 1) + ((snake1 & 0x08000) == 0x08000);
+        snake1 = (snake1 << 1) + ((snake0 & 0x08000) == 0x08000);
         snake0 = (snake0 << 1);
       }
       else
       {
-        snake0 = (snake0 >> 1) + ((snake1 & 0x01) << 8);
-        snake1 = (snake1 >> 1) + ((snake2 & 0x01) << 8);
-        snake2 = (snake2 >> 1) + ((snake3 & 0x01) << 8);
+        snake0 = (snake0 >> 1) + ((snake1 & 0x01) << 15);
+        snake1 = (snake1 >> 1) + ((snake2 & 0x01) << 15);
+        snake2 = (snake2 >> 1) + ((snake3 & 0x01) << 15);
         snake3 = (snake3 >> 1);
       }
     }
     turnOn = true;
+  }
+  
+  CS.portWrite(0, snake0);
+  CS.portWrite(1, snake1);
+  CS.portWrite(2, snake2);
+  CS.portWrite(3, snake3);
+  delay(delay_ms);
+}
+
+void stack(displayDirection_t dir_in)
+{
+  static int snake0 = 0;
+  static int snake1 = 0;
+  static int snake2 = 0;
+  static int snake3 = 0;
+  static int level = 0;
+  static int slide = 0;
+  static bool sliding = false;
+  static displayDirection_t dir = LEFT;
+  if (dir != dir_in)
+  {
+    dir = dir_in;
+    //reset snake so it doesn't look wonky
+    snake0 = 0;
+    snake1 = 0;
+    snake2 = 0;
+    snake3 = 0;
+    level = 0;
+  }
+  
+  if (sliding)
+  {
+    if (LEFT == dir)
+    {
+      snake3 = (snake3 << 1) + ((snake2 & 0x08000) == 0x08000);
+      snake2 = (snake2 << 1) + ((snake1 & 0x08000) == 0x08000);
+      snake1 = (snake1 << 1) + ((snake0 & 0x08000) == 0x08000);
+      snake0 = (snake0 << 1);
+    }
+    else
+    {
+      snake0 = (snake0 >> 1) + ((snake1 & 0x01) << 15);
+      snake1 = (snake1 >> 1) + ((snake2 & 0x01) << 15);
+      snake2 = (snake2 >> 1) + ((snake3 & 0x01) << 15);
+      snake3 = (snake3 >> 1);
+    }
+  }
+  else
+  {
+    slide = 0;
+    level++;
+    if (MAX_LIGHTS <= level)
+    {
+      //filled up, start over
+      snake0 = 0;
+      snake1 = 0;
+      snake2 = 0;
+      snake3 = 0;
+    }
+    else
+    {
+      if (LEFT == dir)
+      {
+        snake0 += 1;
+      }
+      else
+      {
+        snake3 += 0x08000;
+      }
+    }
   }
   
   CS.portWrite(0, snake0);
