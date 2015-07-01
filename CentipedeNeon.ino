@@ -48,6 +48,7 @@ typedef enum
 void wave(int x_in, int y_in, displayDirection_t dir_in);
 void stepping(int x_in, int y_in, displayDirection_t dir_in);
 void stack(displayDirection_t dir_in);
+void rand(int x_in);
 
 //Potentiometer sets speed
 //Button for direction
@@ -98,8 +99,10 @@ void loop()
       stepping(global_x, global_y, displayDirection);
       break;
     case STACK:
+      stack(displayDirection);
       break;
     case RANDOM_X_ON:
+      rand(global_x);
       break;
     case MAX_DISPLAY: //fall through
     default:
@@ -358,4 +361,32 @@ void stack(displayDirection_t dir_in)
   delay(delay_ms);
 }
 
+void rand(int x_in)
+{
+  long long snake = 0;
+  long long snake_temp = 0;
+  int snake0 = 0;
+  int snake1 = 0;
+  int snake2 = 0;
+  int snake3 = 0;
+  int i = 0;
+  
+  while (i < x_in)
+  {
+    snake_temp = 1 << random(64);
+    snake |= snake_temp;
+    i++;
+  }
+  
+  snake0 = snake & 0x000000000000ffffLL;
+  snake1 = snake & 0x00000000ffff0000LL;
+  snake2 = snake & 0x0000ffff00000000LL;
+  snake3 = snake & 0xffff000000000000LL;
+  
+  CS.portWrite(0, snake0);
+  CS.portWrite(1, snake1);
+  CS.portWrite(2, snake2);
+  CS.portWrite(3, snake3);
+  delay(delay_ms*10);
+}
 
