@@ -57,11 +57,13 @@ void stack(displayDirection_t dir_in);
 Centipede CS; // create Centipede object
 const int MAX_LIGHTS = 64;
 
+//Globals
 int delay_ms = 100;
 display_t active_program = STEP_X_ON_Y_OFF; //ALL_BLINK;
 displayDirection_t displayDirection = LEFT;
 int global_x = 3;
 int global_y = 2;
+
  
 void setup()
 {
@@ -279,22 +281,23 @@ void stepping(int x_in, int y_in, displayDirection_t dir_in)
 
 void stack(displayDirection_t dir_in)
 {
-  static int snake0 = 0;
-  static int snake1 = 0;
-  static int snake2 = 0;
-  static int snake3 = 0;
-  static int level = 0;
-  static int slide = 0;
+  static long long snake = 0;
+  static long long snake_slider = 0;
+  static long long snake_stack = 0;
+  static int level = 0;      //starts at 0, where stack level is none, then 1-64 are stack slots
+  static int slide = 63;    //0-63
   static bool sliding = false;
   static displayDirection_t dir = LEFT;
+  int snake0 = 0;
+  int snake1 = 0;
+  int snake2 = 0;
+  int snake3 = 0;
   if (dir != dir_in)
   {
     dir = dir_in;
     //reset snake so it doesn't look wonky
-    snake0 = 0;
-    snake1 = 0;
-    snake2 = 0;
-    snake3 = 0;
+    snake = 0;
+    slide = 63;
     level = 0;
   }
   
@@ -302,43 +305,51 @@ void stack(displayDirection_t dir_in)
   {
     if (LEFT == dir)
     {
-      snake3 = (snake3 << 1) + ((snake2 & 0x08000) == 0x08000);
-      snake2 = (snake2 << 1) + ((snake1 & 0x08000) == 0x08000);
-      snake1 = (snake1 << 1) + ((snake0 & 0x08000) == 0x08000);
-      snake0 = (snake0 << 1);
+      snake_slider = (snake_slider << 1);  //slide the light left
     }
     else
     {
-      snake0 = (snake0 >> 1) + ((snake1 & 0x01) << 15);
-      snake1 = (snake1 >> 1) + ((snake2 & 0x01) << 15);
-      snake2 = (snake2 >> 1) + ((snake3 & 0x01) << 15);
-      snake3 = (snake3 >> 1);
+      snake_slider = (snake_slider >> 1);  //slide the light right
+    }
+    slide--;  //count down the slide to the level (which counts up toward the slide)
+    if (slide <= level)  //if slide hits the notch above the current level, update the stack to that level (level 0 is all off)
+    {
+      level++;  //update the stack to the next level
+      if (LEFT == dir)
+      {
+        snake_stack = (snake_stack >> 1) + 0x08000000000000000LL;  //grow the stack
+      }
+      else
+      {
+        snake_stack = (snake_stack >> 1) + 0x01;  //grow the stack
+      }
+      sliding = false;  //begin the next sliding light
+      if (level >= 64)  //if this was the last level, reset
+      {
+        snake = 0;
+        slide = 63;
+        level = 0;
+      }
     }
   }
   else
   {
-    slide = 0;
-    level++;
-    if (MAX_LIGHTS <= level)
+    slide = 63;
+    if (LEFT == dir)
     {
-      //filled up, start over
-      snake0 = 0;
-      snake1 = 0;
-      snake2 = 0;
-      snake3 = 0;
+      snake_slider = 0x01;  //start the next slide
     }
     else
     {
-      if (LEFT == dir)
-      {
-        snake0 += 1;
-      }
-      else
-      {
-        snake3 += 0x08000;
-      }
+      snake_slider = 0x08000000000000000LL;  //start the next slide
     }
   }
+  
+  snake = snake_slider | snake_stack;
+  snake0 = snake & 0x000000000000ffffLL;
+  snake1 = snake & 0x00000000ffff0000LL;
+  snake2 = snake & 0x0000ffff00000000LL;
+  snake3 = snake & 0xffff000000000000LL;
   
   CS.portWrite(0, snake0);
   CS.portWrite(1, snake1);
