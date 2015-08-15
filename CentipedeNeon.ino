@@ -60,10 +60,10 @@ const int MAX_LIGHTS = 64;
 
 //Globals
 int delay_ms = 100;
-display_t active_program = STEP_X_ON_Y_OFF; //ALL_BLINK;
+display_t active_program = WAVE_X_ON_Y_OFF; //ALL_BLINK;
 displayDirection_t displayDirection = LEFT;
-int global_x = 3;
-int global_y = 2;
+int global_x = 10;
+int global_y = 3;
 
  
 void setup()
@@ -363,8 +363,7 @@ void stack(displayDirection_t dir_in)
 
 void rand(int x_in)
 {
-  long long snake = 0;
-  long long snake_temp = 0;
+  int snake_temp = 0;
   int snake0 = 0;
   int snake1 = 0;
   int snake2 = 0;
@@ -373,15 +372,25 @@ void rand(int x_in)
   
   while (i < x_in)
   {
-    snake_temp = 1 << random(64);
-    snake |= snake_temp;
+      int quadrant = random(4);
+      snake_temp = 1 << random(16);
+      switch(quadrant)
+      {
+        case 0:
+          snake0 |= snake_temp;
+          break;
+        case 1:
+          snake1 |= snake_temp;
+          break;
+        case 2:
+          snake2 |= snake_temp;
+        case 3:
+        default:
+          snake3 |= snake_temp;
+          break;
+      }
     i++;
   }
-  
-  snake0 = snake & 0x000000000000ffffLL;
-  snake1 = snake & 0x00000000ffff0000LL;
-  snake2 = snake & 0x0000ffff00000000LL;
-  snake3 = snake & 0xffff000000000000LL;
   
   CS.portWrite(0, snake0);
   CS.portWrite(1, snake1);
