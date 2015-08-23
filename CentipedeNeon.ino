@@ -64,11 +64,11 @@ Centipede CS; // create Centipede object
 const int MAX_LIGHTS = 64;
 
 //Globals
-int delay_ms = 100;
-display_t active_program = HALVES_WAVE_1_ON_LR; //WAVE_X_ON_Y_OFF; //ALL_BLINK;
+int delay_ms = 200;
+display_t active_program = WAVE_X_ON_Y_OFF; //ALL_BLINK;
 displayDirection_t displayDirection = RIGHT;
-int global_x = 10;
-int global_y = 3;
+int global_x = 3;
+int global_y = 2;
 
  
 void setup()
@@ -150,10 +150,10 @@ void allblink(void)
 
 void wave(int x_in, int y_in, displayDirection_t dir_in)
 {
-  static int snake0 = 0;
-  static int snake1 = 0;
-  static int snake2 = 0;
-  static int snake3 = 0;
+  static unsigned int snake0 = 0;
+  static unsigned int snake1 = 0;
+  static unsigned int snake2 = 0;
+  static unsigned int snake3 = 0;
   static int x = 0;
   static int y = 0;
   static bool turnOn = true;
@@ -186,11 +186,12 @@ void wave(int x_in, int y_in, displayDirection_t dir_in)
         snake2 = (snake2 >> 1) + ((snake3 & 0x01) << 15);
         snake3 = (snake3 >> 1) + 0x08000;
       }
-    }
-    else
-    {
-      turnOn = false;
-      x = 0;
+      
+      if (x >= x_in)
+      {
+        turnOn = false;
+        x = 0;
+      }
     }
   }
   else
@@ -212,11 +213,12 @@ void wave(int x_in, int y_in, displayDirection_t dir_in)
         snake2 = (snake2 >> 1) + ((snake3 & 0x01) << 15);
         snake3 = (snake3 >> 1);
       }
-    }
-    else
-    {
-      turnOn = true;
-      y = 0;
+      
+      if (y >= y_in)
+      {
+        turnOn = true;
+        y = 0;
+      }
     }
   }
   
