@@ -65,8 +65,8 @@ const int MAX_LIGHTS = 64;
 
 //Globals
 int delay_ms = 100;
-display_t active_program = PING_PONG_1_ON; //WAVE_X_ON_Y_OFF; //ALL_BLINK;
-displayDirection_t displayDirection = LEFT;
+display_t active_program = HALVES_WAVE_1_ON_LR; //WAVE_X_ON_Y_OFF; //ALL_BLINK;
+displayDirection_t displayDirection = RIGHT;
 int global_x = 10;
 int global_y = 3;
 
@@ -418,10 +418,10 @@ void halves_wave_1_lr(displayDirection_t dir_in)
   static int count = 0;
   static const int half = MAX_LIGHTS >> 1;  //divide MAX_LIGHTS in half
   static const int quarter = MAX_LIGHTS >> 2;  //divide MAX_LIGHTS in quarter
-  static int snake0 = 0;
-  static int snake1 = 0;
-  static int snake2 = 0;
-  static int snake3 = 0;
+  static unsigned int snake0 = 0;
+  static unsigned int snake1 = 0;
+  static unsigned int snake2 = 0;
+  static unsigned int snake3 = 0;
   
   if (LEFT == dir_in)
   {
@@ -441,10 +441,10 @@ void halves_wave_1_lr(displayDirection_t dir_in)
     }
     else
     {
-      snake0 |= snake0 << 1;
-      snake1 |= snake1 << 1;
-      snake2 |= snake2 << 1;
-      snake3 |= snake3 << 1;
+      snake0 = snake0 << 1;
+      snake1 = snake1 << 1;
+      snake2 = snake2 << 1;
+      snake3 = snake3 << 1;
     }
   }
   else
@@ -452,23 +452,23 @@ void halves_wave_1_lr(displayDirection_t dir_in)
     if (0 == count)
     {
       snake0 = 0;
-      snake1 = 0x8000;
+      snake1 = 0x08000;
       snake2 = 0;
-      snake3 = 0x8000;
+      snake3 = 0x08000;
     }
     else if (quarter == count)
     {
-      snake0 = 0x8000;
+      snake0 = 0x08000;
       snake1 = 0;
-      snake2 = 0x8000;
+      snake2 = 0x08000;
       snake3 = 0;
     }
     else
     {
-      snake0 |= snake0 >> 1;
-      snake1 |= snake1 >> 1;
-      snake2 |= snake2 >> 1;
-      snake3 |= snake3 >> 1;
+      snake0 = snake0 >> 1;
+      snake1 = snake1 >> 1;
+      snake2 = snake2 >> 1;
+      snake3 = snake3 >> 1;
     }
   }
   
@@ -493,10 +493,10 @@ void halves_wave_1_io(displayDirection_t dir_in)
   static int count = 0;
   static const int half = MAX_LIGHTS >> 1;  //divide MAX_LIGHTS in half
   static const int quarter = MAX_LIGHTS >> 2;  //divide MAX_LIGHTS in quarter
-  static int snake0 = 0;
-  static int snake1 = 0;
-  static int snake2 = 0;
-  static int snake3 = 0;
+  static unsigned int snake0 = 0;
+  static unsigned int snake1 = 0;
+  static unsigned int snake2 = 0;
+  static unsigned int snake3 = 0;
   //left will by in, right will be out
   
   if (LEFT == dir_in)
@@ -506,21 +506,21 @@ void halves_wave_1_io(displayDirection_t dir_in)
       snake0 = 1;
       snake1 = 0;
       snake2 = 0;
-      snake3 = 0x8000;
+      snake3 = 0x08000;
     }
     else if (quarter == count)
     {
       snake0 = 0;
       snake1 = 1;
-      snake2 = 0x8000;
+      snake2 = 0x08000;
       snake3 = 0;
     }
     else
     {
-      snake0 |= snake0 << 1;
-      snake1 |= snake1 << 1;
-      snake2 |= snake2 >> 1;
-      snake3 |= snake3 >> 1;
+      snake0 = snake0 << 1;
+      snake1 = snake1 << 1;
+      snake2 = snake2 >> 1;
+      snake3 = snake3 >> 1;
     }
   }
   else
@@ -528,23 +528,23 @@ void halves_wave_1_io(displayDirection_t dir_in)
     if (0 == count)
     {
       snake0 = 0;
-      snake1 = 0x8000;
+      snake1 = 0x08000;
       snake2 = 1;
       snake3 = 0;
     }
     else if (quarter == count)
     {
-      snake0 = 0x8000;
+      snake0 = 0x08000;
       snake1 = 0;
       snake2 = 0;
       snake3 = 1;
     }
     else
     {
-      snake0 |= snake0 << 1;
-      snake1 |= snake1 << 1;
-      snake2 |= snake2 >> 1;
-      snake3 |= snake3 >> 1;
+      snake0 = snake0 >> 1;
+      snake1 = snake1 >> 1;
+      snake2 = snake2 << 1;
+      snake3 = snake3 << 1;
     }
   }
   
