@@ -344,7 +344,7 @@ void stack(displayDirection_t dir_in)
       }
       else
       {
-        snake_stack = (snake_stack >> 1) + 0x01;  //grow the stack
+        snake_stack = (snake_stack << 1) + 0x01;  //grow the stack
       }
       sliding = false;  //begin the next sliding light
       if (level >= 64)  //if this was the last level, reset
