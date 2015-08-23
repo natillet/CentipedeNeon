@@ -28,6 +28,8 @@
   CS.portPullup(0, 0b0111111001111110); // 0 = no pullup, 1 = pullup
 */
 
+#define ADC0 0
+
 typedef enum
 {
   LEFT = 0,
@@ -64,10 +66,10 @@ Centipede CS; // create Centipede object
 const int MAX_LIGHTS = 64;
 
 //Globals
-int delay_ms = 200;
-display_t active_program = WAVE_X_ON_Y_OFF; //ALL_BLINK;
+int delay_ms = 100;
+display_t active_program = STACK; //ALL_BLINK;
 displayDirection_t displayDirection = RIGHT;
-int global_x = 3;
+int global_x = 2;
 int global_y = 2;
 
  
@@ -90,6 +92,8 @@ void setup()
 void loop()
 {
   //read ADC
+  delay_ms = analogRead(ADC0);
+  delay_ms += 25; //don't let it go too fast
   
   //choose program to display
   switch(active_program)
@@ -231,10 +235,10 @@ void wave(int x_in, int y_in, displayDirection_t dir_in)
 
 void stepping(int x_in, int y_in, displayDirection_t dir_in)
 {
-  static int snake0 = 0;
-  static int snake1 = 0;
-  static int snake2 = 0;
-  static int snake3 = 0;
+  static unsigned int snake0 = 0;
+  static unsigned int snake1 = 0;
+  static unsigned int snake2 = 0;
+  static unsigned int snake3 = 0;
   static int x = 0;
   static int y = 0;
   static bool turnOn = true;
@@ -300,17 +304,17 @@ void stepping(int x_in, int y_in, displayDirection_t dir_in)
 
 void stack(displayDirection_t dir_in)
 {
-  static long long snake = 0;
-  static long long snake_slider = 0;
-  static long long snake_stack = 0;
+  static unsigned long long snake = 0;
+  static unsigned long long snake_slider = 0;
+  static unsigned long long snake_stack = 0;
   static int level = 0;      //starts at 0, where stack level is none, then 1-64 are stack slots
   static int slide = 63;    //0-63
   static bool sliding = false;
   static displayDirection_t dir = LEFT;
-  int snake0 = 0;
-  int snake1 = 0;
-  int snake2 = 0;
-  int snake3 = 0;
+  unsigned int snake0 = 0;
+  unsigned int snake1 = 0;
+  unsigned int snake2 = 0;
+  unsigned int snake3 = 0;
   if (dir != dir_in)
   {
     dir = dir_in;
@@ -346,6 +350,7 @@ void stack(displayDirection_t dir_in)
       if (level >= 64)  //if this was the last level, reset
       {
         snake = 0;
+        snake_stack = 0;
         slide = 63;
         level = 0;
       }
@@ -354,6 +359,7 @@ void stack(displayDirection_t dir_in)
   else
   {
     slide = 63;
+    sliding = true;
     if (LEFT == dir)
     {
       snake_slider = 0x01;  //start the next slide
@@ -366,15 +372,15 @@ void stack(displayDirection_t dir_in)
   
   snake = snake_slider | snake_stack;
   snake0 = snake & 0x000000000000ffffLL;
-  snake1 = snake & 0x00000000ffff0000LL;
-  snake2 = snake & 0x0000ffff00000000LL;
-  snake3 = snake & 0xffff000000000000LL;
+  snake1 = (snake & 0x00000000ffff0000LL) >> 16;
+  snake2 = (snake & 0x0000ffff00000000LL) >> 32;
+  snake3 = (snake & 0xffff000000000000LL) >> 48;
   
   CS.portWrite(0, snake0);
   CS.portWrite(1, snake1);
   CS.portWrite(2, snake2);
   CS.portWrite(3, snake3);
-  delay(delay_ms);
+  delay(delay_ms-20);
 }
 
 void rand(int x_in)
@@ -424,8 +430,18 @@ void halves_wave_1_lr(displayDirection_t dir_in)
   static unsigned int snake1 = 0;
   static unsigned int snake2 = 0;
   static unsigned int snake3 = 0;
+  static displayDirection_t dir = LEFT;
+  if (dir != dir_in)
+  {
+    dir = dir_in;
+    //reset snake so it doesn't look wonky
+    snake0 = 0;
+    snake1 = 0;
+    snake2 = 0;
+    snake3 = 0;
+  }
   
-  if (LEFT == dir_in)
+  if (LEFT == dir)
   {
     if (0 == count)
     {
@@ -499,9 +515,18 @@ void halves_wave_1_io(displayDirection_t dir_in)
   static unsigned int snake1 = 0;
   static unsigned int snake2 = 0;
   static unsigned int snake3 = 0;
-  //left will by in, right will be out
+  static displayDirection_t dir = LEFT;  //left will by in, right will be out
+  if (dir != dir_in)
+  {
+    dir = dir_in;
+    //reset snake so it doesn't look wonky
+    snake0 = 0;
+    snake1 = 0;
+    snake2 = 0;
+    snake3 = 0;
+  }
   
-  if (LEFT == dir_in)
+  if (LEFT == dir)
   {
     if (0 == count)
     {
