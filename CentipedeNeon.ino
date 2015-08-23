@@ -41,6 +41,9 @@ typedef enum
   STEP_X_ON_Y_OFF,      //steps - group of X stepping to next group of X (Y blank between)
   STACK,                //stacking - one light travels to the end and stays, then another travels to the second to the end and stays, etc.
   RANDOM_X_ON,          //randomized - max of X on at a time
+  HALVES_WAVE_1_ON_LR,  //two lights travel either left or right, half the length apart
+  HALVES_WAVE_1_ON_IO,  //two lights travel either outward in or inward out
+  PING_PONG_1_ON,       //one light travels left then right
   MAX_DISPLAY
 } display_t;
 
@@ -49,6 +52,8 @@ void wave(int x_in, int y_in, displayDirection_t dir_in);
 void stepping(int x_in, int y_in, displayDirection_t dir_in);
 void stack(displayDirection_t dir_in);
 void rand(int x_in);
+void halves_wave_1_lr(displayDirection_t dir_in);
+void halves_wave_1_io(displayDirection_t dir_in);
 
 //Potentiometer sets speed
 //Button for direction
@@ -90,7 +95,7 @@ void loop()
   switch(active_program)
   {
     case ALL_BLINK:
-      blink();
+      allblink();
       break;
     case WAVE_X_ON_Y_OFF:
       wave(global_x, global_y, displayDirection);
@@ -104,6 +109,15 @@ void loop()
     case RANDOM_X_ON:
       rand(global_x);
       break;
+    case HALVES_WAVE_1_ON_LR:
+      halves_wave_1_lr(displayDirection);
+      break;
+    case HALVES_WAVE_1_ON_IO:
+      halves_wave_1_io(displayDirection);
+      break;
+    case PING_PONG_1_ON:
+      ping_pong_1_on();
+      break;
     case MAX_DISPLAY: //fall through
     default:
       active_program = ALL_BLINK;
@@ -112,7 +126,7 @@ void loop()
 }
 
 //// DISPLAY PROGRAMS ////
-void blink(void)
+void allblink(void)
 {
   static bool turnOn = true;
   if (turnOn)
@@ -397,5 +411,264 @@ void rand(int x_in)
   CS.portWrite(2, snake2);
   CS.portWrite(3, snake3);
   delay(delay_ms*10);
+}
+
+void halves_wave_1_lr(displayDirection_t dir_in)
+{
+  static int count = 0;
+  static const int half = MAX_LIGHTS >> 1;  //divide MAX_LIGHTS in half
+  static const int quarter = MAX_LIGHTS >> 2;  //divide MAX_LIGHTS in quarter
+  static int snake0 = 0;
+  static int snake1 = 0;
+  static int snake2 = 0;
+  static int snake3 = 0;
+  
+  if (LEFT == dir_in)
+  {
+    if (0 == count)
+    {
+      snake0 = 1;
+      snake1 = 0;
+      snake2 = 1;
+      snake3 = 0;
+    }
+    else if (quarter == count)
+    {
+      snake0 = 0;
+      snake1 = 1;
+      snake2 = 0;
+      snake3 = 1;
+    }
+    else
+    {
+      snake0 |= snake0 << 1;
+      snake1 |= snake1 << 1;
+      snake2 |= snake2 << 1;
+      snake3 |= snake3 << 1;
+    }
+  }
+  else
+  {
+    if (0 == count)
+    {
+      snake0 = 0;
+      snake1 = 0x8000;
+      snake2 = 0;
+      snake3 = 0x8000;
+    }
+    else if (quarter == count)
+    {
+      snake0 = 0x8000;
+      snake1 = 0;
+      snake2 = 0x8000;
+      snake3 = 0;
+    }
+    else
+    {
+      snake0 |= snake0 >> 1;
+      snake1 |= snake1 >> 1;
+      snake2 |= snake2 >> 1;
+      snake3 |= snake3 >> 1;
+    }
+  }
+  
+  if (count < half)
+  {
+    count++;
+  }
+  else
+  {
+    count = 0;
+  }
+  
+  CS.portWrite(0, snake0);
+  CS.portWrite(1, snake1);
+  CS.portWrite(2, snake2);
+  CS.portWrite(3, snake3);
+  delay(delay_ms);
+}
+
+void halves_wave_1_io(displayDirection_t dir_in)
+{
+  static int count = 0;
+  static const int half = MAX_LIGHTS >> 1;  //divide MAX_LIGHTS in half
+  static const int quarter = MAX_LIGHTS >> 2;  //divide MAX_LIGHTS in quarter
+  static int snake0 = 0;
+  static int snake1 = 0;
+  static int snake2 = 0;
+  static int snake3 = 0;
+  //left will by in, right will be out
+  
+  if (LEFT == dir_in)
+  {
+    if (0 == count)
+    {
+      snake0 = 1;
+      snake1 = 0;
+      snake2 = 0;
+      snake3 = 0x8000;
+    }
+    else if (quarter == count)
+    {
+      snake0 = 0;
+      snake1 = 1;
+      snake2 = 0x8000;
+      snake3 = 0;
+    }
+    else
+    {
+      snake0 |= snake0 << 1;
+      snake1 |= snake1 << 1;
+      snake2 |= snake2 >> 1;
+      snake3 |= snake3 >> 1;
+    }
+  }
+  else
+  {
+    if (0 == count)
+    {
+      snake0 = 0;
+      snake1 = 0x8000;
+      snake2 = 1;
+      snake3 = 0;
+    }
+    else if (quarter == count)
+    {
+      snake0 = 0x8000;
+      snake1 = 0;
+      snake2 = 0;
+      snake3 = 1;
+    }
+    else
+    {
+      snake0 |= snake0 << 1;
+      snake1 |= snake1 << 1;
+      snake2 |= snake2 >> 1;
+      snake3 |= snake3 >> 1;
+    }
+  }
+  
+  if (count < half)
+  {
+    count++;
+  }
+  else
+  {
+    count = 0;
+  }
+  
+  CS.portWrite(0, snake0);
+  CS.portWrite(1, snake1);
+  CS.portWrite(2, snake2);
+  CS.portWrite(3, snake3);
+  delay(delay_ms);
+}
+
+void ping_pong_1_on(void)
+{
+  static int count = 0;
+  static const int half = MAX_LIGHTS >> 1;  //divide MAX_LIGHTS in half
+  static const int quarter = MAX_LIGHTS >> 2;  //divide MAX_LIGHTS in quarter
+  static int snake0 = 0;
+  static int snake1 = 0;
+  static int snake2 = 0;
+  static int snake3 = 0;
+  static displayDirection_t dir = LEFT;
+  
+  if (LEFT == dir)
+  {
+    if (0 == count)
+    {
+      snake0 = 1;
+      snake1 = 0;
+      snake2 = 0;
+      snake3 = 0;
+    }
+    else if (quarter == count)
+    {
+      snake0 = 0;
+      snake1 = 1;
+      snake2 = 0;
+      snake3 = 0;
+    }
+    else if (half == count)
+    {
+      snake0 = 0;
+      snake1 = 0;
+      snake2 = 1;
+      snake3 = 0;
+    }
+    else if ((half+quarter) == count)
+    {
+      snake0 = 0;
+      snake1 = 0;
+      snake2 = 0;
+      snake3 = 1;
+    }
+    else
+    {
+      snake0 |= snake0 << 1;
+      snake1 |= snake1 << 1;
+      snake2 |= snake2 << 1;
+      snake3 |= snake3 << 1;
+    }
+    count++;
+  }
+  else
+  {
+    if (MAX_LIGHTS == count)
+    {
+      snake0 = 0;
+      snake1 = 0;
+      snake2 = 0;
+      snake3 = 0x8000;
+    }
+    else if ((half+quarter) == count)
+    {
+      snake0 = 0;
+      snake1 = 0;
+      snake2 = 0x8000;
+      snake3 = 0;
+    }
+    else if (half == count)
+    {
+      snake0 = 0;
+      snake1 = 0x8000;
+      snake2 = 0;
+      snake3 = 0;
+    }
+    else if (quarter == count)
+    {
+      snake0 = 0x8000;
+      snake1 = 0;
+      snake2 = 0;
+      snake3 = 0;
+    }
+    else
+    {
+      snake0 |= snake0 >> 1;
+      snake1 |= snake1 >> 1;
+      snake2 |= snake2 >> 1;
+      snake3 |= snake3 >> 1;
+    }
+    count--;
+  }
+  
+  if (count >= MAX_LIGHTS)
+  {
+    dir = RIGHT;
+    count = MAX_LIGHTS;
+  }
+  else if (count <= 0)
+  {
+    dir = LEFT;
+    count = 0;
+  }
+  
+  CS.portWrite(0, snake0);
+  CS.portWrite(1, snake1);
+  CS.portWrite(2, snake2);
+  CS.portWrite(3, snake3);
+  delay(delay_ms);
 }
 
