@@ -28,7 +28,11 @@
   CS.portPullup(0, 0b0111111001111110); // 0 = no pullup, 1 = pullup
 */
 
-#define ADC0 0
+#define ADC0 0  //analog pin of adc
+#define SWITCH0 0  //digital pin for program selector bit0
+#define SWITCH1 1  //digital pin for program selector bit1
+#define SWITCH2 2  //digital pin for program selector bit2
+#define SWITCH_LR 3  //digital pin for display direction selector
 
 typedef enum
 {
@@ -71,6 +75,10 @@ display_t active_program = STACK; //ALL_BLINK;
 displayDirection_t displayDirection = RIGHT;
 int global_x = 2;
 int global_y = 2;
+volatile int sw0_pos = 0;
+volatile int sw1_pos = 0;
+volatile int sw2_pos = 0;
+volatile int swLR_pos = 0;
 
  
 void setup()
@@ -85,7 +93,15 @@ void setup()
   CS.portMode(3, 0b0000000000000000); // set all pins on chip 3 to output (48 to 63)
  
   //TWBR = 12; // uncomment for 400KHz I2C (on 16MHz Arduinos)
- 
+  
+  pinMode(SWITCH0, INPUT);
+  pinMode(SWITCH1, INPUT);
+  pinMode(SWITCH2, INPUT);
+  pinMode(SWITCH_LR, INPUT);
+  digitalWrite(SWITCH0, HIGH);
+  digitalWrite(SWITCH1, HIGH);
+  digitalWrite(SWITCH2, HIGH);
+  digitalWrite(SWITCH_LR, HIGH);
 }
  
 
@@ -94,6 +110,23 @@ void loop()
   //read ADC
   delay_ms = analogRead(ADC0);
   delay_ms += 25; //don't let it go too fast
+  
+  //read program switches
+  sw0_pos = digitalRead(SWITCH0);
+  sw1_pos = digitalRead(SWITCH1);
+  sw2_pos = digitalRead(SWITCH2);
+  swLR_pos = digitalRead(SWITCH_LR);
+  
+  active_program = (display_t)((sw2_pos << 2) | (sw1_pos << 1) | sw0_pos);
+  
+  if (0 == swLR_pos)
+  {
+    displayDirection = LEFT;
+  }
+  else
+  {
+    displayDirection = RIGHT;
+  }
   
   //choose program to display
   switch(active_program)
