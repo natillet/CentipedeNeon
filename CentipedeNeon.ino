@@ -182,7 +182,7 @@ void allblink(void)
     CS.portWrite(3, 0);
     turnOn = true;
   }
-  delay(delay_ms*10);
+  delay(delay_ms);
 }
 
 void wave(int x_in, int y_in, displayDirection_t dir_in)
@@ -451,7 +451,7 @@ void rand(int x_in)
   CS.portWrite(1, snake1);
   CS.portWrite(2, snake2);
   CS.portWrite(3, snake3);
-  delay(delay_ms*10);
+  delay(delay_ms);
 }
 
 void halves_wave_1_lr(displayDirection_t dir_in)
