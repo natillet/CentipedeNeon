@@ -32,7 +32,11 @@
 #define SWITCH0 0  //digital pin for program selector bit0
 #define SWITCH1 1  //digital pin for program selector bit1
 #define SWITCH2 2  //digital pin for program selector bit2
-#define SWITCH_LR 3  //digital pin for display direction selector
+#define SWITCH3 3  //digital pin for program selector bit3
+#define SWITCH4 4  //digital pin for program selector bit4
+#define SWITCH5 5  //digital pin for program selector bit5
+#define SWITCH6 6  //digital pin for program selector bit6
+#define SWITCH_LR 7  //digital pin for display direction selector
 
 typedef enum
 {
@@ -73,11 +77,15 @@ const int MAX_LIGHTS = 64;
 int delay_ms = 100;
 display_t active_program = STACK; //ALL_BLINK;
 displayDirection_t displayDirection = RIGHT;
-int global_x = 2;
+int global_x = 6;
 int global_y = 2;
 volatile int sw0_pos = 0;
 volatile int sw1_pos = 0;
 volatile int sw2_pos = 0;
+volatile int sw3_pos = 0;
+volatile int sw4_pos = 0;
+volatile int sw5_pos = 0;
+volatile int sw6_pos = 0;
 volatile int swLR_pos = 0;
 
  
@@ -97,10 +105,18 @@ void setup()
   pinMode(SWITCH0, INPUT);
   pinMode(SWITCH1, INPUT);
   pinMode(SWITCH2, INPUT);
+  pinMode(SWITCH3, INPUT);
+  pinMode(SWITCH4, INPUT);
+  pinMode(SWITCH5, INPUT);
+  pinMode(SWITCH6, INPUT);
   pinMode(SWITCH_LR, INPUT);
   digitalWrite(SWITCH0, HIGH);
   digitalWrite(SWITCH1, HIGH);
   digitalWrite(SWITCH2, HIGH);
+  digitalWrite(SWITCH3, HIGH);
+  digitalWrite(SWITCH4, HIGH);
+  digitalWrite(SWITCH5, HIGH);
+  digitalWrite(SWITCH6, HIGH);
   digitalWrite(SWITCH_LR, HIGH);
 }
  
@@ -115,6 +131,10 @@ void loop()
   sw0_pos = digitalRead(SWITCH0);
   sw1_pos = digitalRead(SWITCH1);
   sw2_pos = digitalRead(SWITCH2);
+  sw3_pos = digitalRead(SWITCH3);
+  sw4_pos = digitalRead(SWITCH4);
+  sw5_pos = digitalRead(SWITCH5);
+  sw6_pos = digitalRead(SWITCH6);
   swLR_pos = digitalRead(SWITCH_LR);
   
   active_program = (display_t)((sw2_pos << 2) | (sw1_pos << 1) | sw0_pos);
@@ -127,6 +147,9 @@ void loop()
   {
     displayDirection = RIGHT;
   }
+  
+  global_x = (((sw3_pos << 1) | sw4_pos) << 1) + 2;
+  global_y = (((sw5_pos << 1) | sw6_pos) << 1) + 2;
   
   //choose program to display
   switch(active_program)
