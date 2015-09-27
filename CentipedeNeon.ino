@@ -253,6 +253,11 @@ void wave(int x_in, int y_in, displayDirection_t dir_in)
         x = 0;
       }
     }
+    else
+    {
+      turnOn = false;
+      x = 0;
+    }
   }
   else
   {
@@ -279,6 +284,11 @@ void wave(int x_in, int y_in, displayDirection_t dir_in)
         turnOn = true;
         y = 0;
       }
+    }
+    else
+    {
+      turnOn = true;
+      y = 0;
     }
   }
   
