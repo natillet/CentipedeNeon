@@ -3,6 +3,8 @@
  
 #include <Wire.h>
 #include "Centipede.h"
+#include <avr/io.h>
+#include <avr/interrupt.h>
  
  
 /* Available commands
@@ -32,11 +34,12 @@
 #define SWITCH0 0  //digital pin for program selector bit0
 #define SWITCH1 1  //digital pin for program selector bit1
 #define SWITCH2 2  //digital pin for program selector bit2
-#define SWITCH3 3  //digital pin for program selector bit3
-#define SWITCH4 4  //digital pin for program selector bit4
-#define SWITCH5 5  //digital pin for program selector bit5
-#define SWITCH6 6  //digital pin for program selector bit6
+#define SWITCH3 4  //digital pin for program selector bit3
+#define SWITCH4 5  //digital pin for program selector bit4
+#define SWITCH5 6  //digital pin for program selector bit5
+//#define SWITCH6 7  //digital pin for program selector bit6
 #define SWITCH_LR 7  //digital pin for display direction selector
+#define BTN 3      //digital pin for interruptable button program selector (attachInterrupt only allows usage of digital pins 2 & 3)
 
 typedef enum
 {
@@ -58,6 +61,7 @@ typedef enum
 } display_t;
 
 //prototypes after enums
+void BtnISR(void);
 void wave(int x_in, int y_in, displayDirection_t dir_in);
 void stepping(int x_in, int y_in, displayDirection_t dir_in);
 void stack(displayDirection_t dir_in);
@@ -72,6 +76,7 @@ void halves_wave_1_io(displayDirection_t dir_in);
 
 Centipede CS; // create Centipede object
 const int MAX_LIGHTS = 64;
+const int PROGRAM_SWITCH_DEBOUNCE = 500;
 
 //Globals
 int delay_ms = 100;
@@ -85,8 +90,10 @@ volatile int sw2_pos = 0;
 volatile int sw3_pos = 0;
 volatile int sw4_pos = 0;
 volatile int sw5_pos = 0;
-volatile int sw6_pos = 0;
+//volatile int sw6_pos = 0;
 volatile int swLR_pos = 0;
+volatile bool switch_programs = false;
+unsigned long programSwitchDebounce = 0;
 
  
 void setup()
@@ -102,13 +109,19 @@ void setup()
  
   //TWBR = 12; // uncomment for 400KHz I2C (on 16MHz Arduinos)
   
+  //Button/Interrupt Setup
+  pinMode(BTN, INPUT);
+  digitalWrite(BTN, HIGH);
+  attachInterrupt(digitalPinToInterrupt(BTN), BtnISR, FALLING);
+  
+  //Switch Setup
   pinMode(SWITCH0, INPUT);
   pinMode(SWITCH1, INPUT);
   pinMode(SWITCH2, INPUT);
   pinMode(SWITCH3, INPUT);
   pinMode(SWITCH4, INPUT);
   pinMode(SWITCH5, INPUT);
-  pinMode(SWITCH6, INPUT);
+//  pinMode(SWITCH6, INPUT);
   pinMode(SWITCH_LR, INPUT);
   digitalWrite(SWITCH0, HIGH);
   digitalWrite(SWITCH1, HIGH);
@@ -116,8 +129,19 @@ void setup()
   digitalWrite(SWITCH3, HIGH);
   digitalWrite(SWITCH4, HIGH);
   digitalWrite(SWITCH5, HIGH);
-  digitalWrite(SWITCH6, HIGH);
+//  digitalWrite(SWITCH6, HIGH);
   digitalWrite(SWITCH_LR, HIGH);
+  
+  //read program switches
+  sw0_pos = digitalRead(SWITCH0);
+  sw1_pos = digitalRead(SWITCH1);
+  sw2_pos = digitalRead(SWITCH2);
+  
+  active_program = (display_t)((sw2_pos << 2) | (sw1_pos << 1) | sw0_pos);
+  
+  programSwitchDebounce = millis();
+  
+  sei();                  //Enable global interrupts
 }
  
 
@@ -127,17 +151,31 @@ void loop()
   delay_ms = analogRead(ADC0);
   delay_ms += 25; //don't let it go too fast
   
-  //read program switches
-  sw0_pos = digitalRead(SWITCH0);
-  sw1_pos = digitalRead(SWITCH1);
-  sw2_pos = digitalRead(SWITCH2);
+  if (switch_programs)
+  {
+    switch_programs = false;
+    long long timeSinceLastSwitch = millis() - programSwitchDebounce;
+    
+    if ((timeSinceLastSwitch > PROGRAM_SWITCH_DEBOUNCE) || (timeSinceLastSwitch < 0))
+    {
+      if (active_program < MAX_DISPLAY)
+      {
+        active_program = (display_t)(((int)active_program) + 1);
+      }
+      else
+      {
+        active_program = (display_t)0;
+      }
+      programSwitchDebounce = millis();
+    }
+  }
+  
+  //read non-program switches
   sw3_pos = digitalRead(SWITCH3);
   sw4_pos = digitalRead(SWITCH4);
   sw5_pos = digitalRead(SWITCH5);
-  sw6_pos = digitalRead(SWITCH6);
+//  sw6_pos = digitalRead(SWITCH6);
   swLR_pos = digitalRead(SWITCH_LR);
-  
-  active_program = (display_t)((sw2_pos << 2) | (sw1_pos << 1) | sw0_pos);
   
   if (0 == swLR_pos)
   {
@@ -149,7 +187,7 @@ void loop()
   }
   
   global_x = (((sw3_pos << 1) | sw4_pos) << 1) + 2;
-  global_y = (((sw5_pos << 1) | sw6_pos) << 1) + 2;
+  global_y = (sw5_pos << 1) + 2;
   
   //choose program to display
   switch(active_program)
@@ -183,6 +221,13 @@ void loop()
       active_program = ALL_BLINK;
       break;
   }
+}
+
+//// BUTTON INTERRUPT ////
+// Interrupt Service Routine attached to INT0 vector
+void BtnISR(void)
+{
+  switch_programs = true;
 }
 
 //// DISPLAY PROGRAMS ////
