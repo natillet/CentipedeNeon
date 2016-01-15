@@ -30,6 +30,8 @@
   CS.portPullup(0, 0b0111111001111110); // 0 = no pullup, 1 = pullup
 */
 
+#define UPLOAD_FROM_ARDUINODROID 0  //For uploading using Josh's phone, which doesn't have libraries and needs hardcoded values
+
 #define ADC0 0  //analog pin of adc
 #define SWITCH0 0  //digital pin for program selector bit0
 #define SWITCH1 1  //digital pin for program selector bit1
@@ -112,7 +114,11 @@ void setup()
   //Button/Interrupt Setup
   pinMode(BTN, INPUT);
   digitalWrite(BTN, HIGH);
+#ifdef UPLOAD_FROM_ARDUINODROID
+attachInterrupt(1, BtnISR, FALLING);
+#else
   attachInterrupt(digitalPinToInterrupt(BTN), BtnISR, FALLING);
+#endif //UPLOAD_FROM_ARDUINODROID
   
   //Switch Setup
   pinMode(SWITCH0, INPUT);
