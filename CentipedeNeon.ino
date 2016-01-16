@@ -5,42 +5,20 @@
 #include "Centipede.h"
 #include <avr/io.h>
 #include <avr/interrupt.h>
+#include <MIDI.h>
  
  
-/* Available commands
-  .digitalWrite([0...127], [LOW...HIGH]) - Acts like normal digitalWrite
-  .digitalRead([0...127]) - Acts like normal digitalRead
-  .pinMode([0...127], [INPUT...OUTPUT]) - Acts like normal pinMode
-  .portWrite([0...7], [0...65535]) - Writes 16-bit value to one port (chip)
-  .portRead([0...7]) - Reads 16-bit value from one port (chip)
-  .portMode([0...7], [0...65535]) - Write I/O mask to one port (chip)
-  .pinPullup([0...127], [LOW...HIGH]) - Sets pullup on input pin
-  .portPullup([0...7], [0...65535]) - Sets pullups on one port (chip)
-  .init() - Sets all registers to initial values
- 
-  Examples
-  CS.init();
-  CS.pinMode(0,OUTPUT);
-  CS.digitalWrite(0, HIGH);
-  int recpin = CS.digitalRead(0);
-  CS.portMode(0, 0b0111111001111110); // 0 = output, 1 = input
-  CS.portWrite(0, 0b1000000110000001); // 0 = LOW, 1 = HIGH
-  int recport = CS.portRead(0);
-  CS.pinPullup(1,HIGH);
-  CS.portPullup(0, 0b0111111001111110); // 0 = no pullup, 1 = pullup
-*/
-
 #define UPLOAD_FROM_ARDUINODROID 0  //For uploading using Josh's phone, which doesn't have libraries and needs hardcoded values
 
 #define ADC0 0  //analog pin of adc
-#define SWITCH0 0  //digital pin for program selector bit0
-#define SWITCH1 1  //digital pin for program selector bit1
-#define SWITCH2 2  //digital pin for program selector bit2
-#define SWITCH3 4  //digital pin for program selector bit3
-#define SWITCH4 5  //digital pin for program selector bit4
-#define SWITCH5 6  //digital pin for program selector bit5
-//#define SWITCH6 7  //digital pin for program selector bit6
-#define SWITCH_LR 7  //digital pin for display direction selector
+//#define SWITCH0 0  //digital pin for program selector bit0 - program
+//#define SWITCH1 1  //digital pin for program selector bit1 - program
+//#define SWITCH2 2  //digital pin for program selector bit2 - program
+                   //digital pin 3 in use for button, below
+#define SWITCH3 4  //digital pin for program selector bit3 - count on
+#define SWITCH4 5  //digital pin for program selector bit4 - count on
+#define SWITCH5 6  //digital pin for program selector bit5 - count off
+#define SWITCH_LR 7  //digital pin for display direction selector - left/right
 #define BTN 3      //digital pin for interruptable button program selector (attachInterrupt only allows usage of digital pins 2 & 3)
 
 typedef enum
@@ -96,11 +74,13 @@ volatile int sw5_pos = 0;
 volatile int swLR_pos = 0;
 volatile bool switch_programs = false;
 unsigned long programSwitchDebounce = 0;
+int delay_modifier = 0;
 
  
 void setup()
 {
   Wire.begin(); // start I2C
+  MIDI_CREATE_DEFAULT_INSTANCE();
  
   CS.initialize(); // set all registers to default
  
@@ -115,35 +95,33 @@ void setup()
   pinMode(BTN, INPUT);
   digitalWrite(BTN, HIGH);
 #ifdef UPLOAD_FROM_ARDUINODROID
-attachInterrupt(1, BtnISR, FALLING);
+  attachInterrupt(1, BtnISR, FALLING);
 #else
   attachInterrupt(digitalPinToInterrupt(BTN), BtnISR, FALLING);
 #endif //UPLOAD_FROM_ARDUINODROID
   
   //Switch Setup
-  pinMode(SWITCH0, INPUT);
-  pinMode(SWITCH1, INPUT);
-  pinMode(SWITCH2, INPUT);
+//  pinMode(SWITCH0, INPUT);
+//  pinMode(SWITCH1, INPUT);
+//  pinMode(SWITCH2, INPUT);
   pinMode(SWITCH3, INPUT);
   pinMode(SWITCH4, INPUT);
   pinMode(SWITCH5, INPUT);
-//  pinMode(SWITCH6, INPUT);
   pinMode(SWITCH_LR, INPUT);
-  digitalWrite(SWITCH0, HIGH);
-  digitalWrite(SWITCH1, HIGH);
-  digitalWrite(SWITCH2, HIGH);
+//  digitalWrite(SWITCH0, HIGH);
+//  digitalWrite(SWITCH1, HIGH);
+//  digitalWrite(SWITCH2, HIGH);
   digitalWrite(SWITCH3, HIGH);
   digitalWrite(SWITCH4, HIGH);
   digitalWrite(SWITCH5, HIGH);
-//  digitalWrite(SWITCH6, HIGH);
   digitalWrite(SWITCH_LR, HIGH);
   
-  //read program switches
-  sw0_pos = digitalRead(SWITCH0);
-  sw1_pos = digitalRead(SWITCH1);
-  sw2_pos = digitalRead(SWITCH2);
+//  //read program switches
+//  sw0_pos = digitalRead(SWITCH0);
+//  sw1_pos = digitalRead(SWITCH1);
+//  sw2_pos = digitalRead(SWITCH2);
   
-  active_program = (display_t)((sw2_pos << 2) | (sw1_pos << 1) | sw0_pos);
+//  active_program = (display_t)((sw2_pos << 2) | (sw1_pos << 1) | sw0_pos);
   
   programSwitchDebounce = millis();
   
@@ -180,7 +158,6 @@ void loop()
   sw3_pos = digitalRead(SWITCH3);
   sw4_pos = digitalRead(SWITCH4);
   sw5_pos = digitalRead(SWITCH5);
-//  sw6_pos = digitalRead(SWITCH6);
   swLR_pos = digitalRead(SWITCH_LR);
   
   if (0 == swLR_pos)
@@ -209,6 +186,7 @@ void loop()
       break;
     case STACK:
       stack(displayDirection);
+      delay_modifier = -20;
       break;
     case RANDOM_X_ON:
       rand(global_x);
@@ -225,8 +203,10 @@ void loop()
     case MAX_DISPLAY: //fall through
     default:
       active_program = ALL_BLINK;
+      allblink();
       break;
   }
+  delay(delay_ms + delay_modifier);
 }
 
 //// BUTTON INTERRUPT ////
@@ -256,7 +236,6 @@ void allblink(void)
     CS.portWrite(3, 0);
     turnOn = true;
   }
-  delay(delay_ms);
 }
 
 void wave(int x_in, int y_in, displayDirection_t dir_in)
@@ -347,7 +326,6 @@ void wave(int x_in, int y_in, displayDirection_t dir_in)
   CS.portWrite(1, snake1);
   CS.portWrite(2, snake2);
   CS.portWrite(3, snake3);
-  delay(delay_ms);
 }
 
 void stepping(int x_in, int y_in, displayDirection_t dir_in)
@@ -416,7 +394,6 @@ void stepping(int x_in, int y_in, displayDirection_t dir_in)
   CS.portWrite(1, snake1);
   CS.portWrite(2, snake2);
   CS.portWrite(3, snake3);
-  delay(delay_ms);
 }
 
 void stack(displayDirection_t dir_in)
@@ -497,7 +474,6 @@ void stack(displayDirection_t dir_in)
   CS.portWrite(1, snake1);
   CS.portWrite(2, snake2);
   CS.portWrite(3, snake3);
-  delay(delay_ms-20);
 }
 
 void rand(int x_in)
@@ -535,7 +511,6 @@ void rand(int x_in)
   CS.portWrite(1, snake1);
   CS.portWrite(2, snake2);
   CS.portWrite(3, snake3);
-  delay(delay_ms);
 }
 
 void halves_wave_1_lr(displayDirection_t dir_in)
@@ -620,7 +595,6 @@ void halves_wave_1_lr(displayDirection_t dir_in)
   CS.portWrite(1, snake1);
   CS.portWrite(2, snake2);
   CS.portWrite(3, snake3);
-  delay(delay_ms);
 }
 
 void halves_wave_1_io(displayDirection_t dir_in)
@@ -705,7 +679,6 @@ void halves_wave_1_io(displayDirection_t dir_in)
   CS.portWrite(1, snake1);
   CS.portWrite(2, snake2);
   CS.portWrite(3, snake3);
-  delay(delay_ms);
 }
 
 void ping_pong_1_on(void)
@@ -813,6 +786,5 @@ void ping_pong_1_on(void)
   CS.portWrite(1, snake1);
   CS.portWrite(2, snake2);
   CS.portWrite(3, snake3);
-  delay(delay_ms);
 }
 
