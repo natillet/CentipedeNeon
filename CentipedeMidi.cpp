@@ -13,9 +13,9 @@ void midi_sequence(unsigned int port0, unsigned int port1, unsigned int port2, u
   for(int i = 0; i < 16; i++)
   {
     midi_state[i]    = port0 & 0x0001;
-    midi_state[i+8]  = port1 & 0x0001;
-    midi_state[i+16] = port2 & 0x0001;
-    midi_state[i+24] = port3 & 0x0001;
+    midi_state[i+16]  = port1 & 0x0001;
+    midi_state[i+32] = port2 & 0x0001;
+    midi_state[i+48] = port3 & 0x0001;
     port0 = port0 >> 1;
     port1 = port1 >> 1;
     port2 = port2 >> 1;
