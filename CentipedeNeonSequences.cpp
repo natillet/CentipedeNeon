@@ -9,24 +9,29 @@ int global_y = 2;
 unsigned long programSwitchDebounce = 0;
 int delay_modifier = 0;
 
+unsigned int port0 = 0;
+unsigned int port1 = 0;
+unsigned int port2 = 0;
+unsigned int port3 = 0;
+
 //// DISPLAY PROGRAMS ////
 void allblink(void)
 {
   static bool turnOn = true;
   if (turnOn)
   {
-    CS.portWrite(0, 0xFFFF);
-    CS.portWrite(1, 0xFFFF);
-    CS.portWrite(2, 0xFFFF);
-    CS.portWrite(3, 0xFFFF);
+    port0 = 0xFFFF;
+    port1 = 0xFFFF;
+    port2 = 0xFFFF;
+    port3 = 0xFFFF;
     turnOn = false;
   }
   else
   {
-    CS.portWrite(0, 0);
-    CS.portWrite(1, 0);
-    CS.portWrite(2, 0);
-    CS.portWrite(3, 0);
+    port0 = 0;
+    port1 = 0;
+    port2 = 0;
+    port3 = 0;
     turnOn = true;
   }
 }
@@ -115,10 +120,10 @@ void wave(int x_in, int y_in, displayDirection_t dir_in)
     }
   }
   
-  CS.portWrite(0, snake0);
-  CS.portWrite(1, snake1);
-  CS.portWrite(2, snake2);
-  CS.portWrite(3, snake3);
+  port0 = snake0;
+  port1 = snake1;
+  port2 = snake2;
+  port3 = snake3;
 }
 
 void stepping(int x_in, int y_in, displayDirection_t dir_in)
@@ -183,10 +188,10 @@ void stepping(int x_in, int y_in, displayDirection_t dir_in)
     turnOn = true;
   }
   
-  CS.portWrite(0, snake0);
-  CS.portWrite(1, snake1);
-  CS.portWrite(2, snake2);
-  CS.portWrite(3, snake3);
+  port0 = snake0;
+  port1 = snake1;
+  port2 = snake2;
+  port3 = snake3;
 }
 
 void stack(displayDirection_t dir_in)
@@ -263,10 +268,10 @@ void stack(displayDirection_t dir_in)
   snake2 = (snake & 0x0000ffff00000000LL) >> 32;
   snake3 = (snake & 0xffff000000000000LL) >> 48;
   
-  CS.portWrite(0, snake0);
-  CS.portWrite(1, snake1);
-  CS.portWrite(2, snake2);
-  CS.portWrite(3, snake3);
+  port0 = snake0;
+  port1 = snake1;
+  port2 = snake2;
+  port3 = snake3;
 }
 
 void rand(int x_in)
@@ -300,10 +305,10 @@ void rand(int x_in)
     i++;
   }
   
-  CS.portWrite(0, snake0);
-  CS.portWrite(1, snake1);
-  CS.portWrite(2, snake2);
-  CS.portWrite(3, snake3);
+  port0 = snake0;
+  port1 = snake1;
+  port2 = snake2;
+  port3 = snake3;
 }
 
 void halves_wave_1_lr(displayDirection_t dir_in)
@@ -384,10 +389,10 @@ void halves_wave_1_lr(displayDirection_t dir_in)
     count = 0;
   }
   
-  CS.portWrite(0, snake0);
-  CS.portWrite(1, snake1);
-  CS.portWrite(2, snake2);
-  CS.portWrite(3, snake3);
+  port0 = snake0;
+  port1 = snake1;
+  port2 = snake2;
+  port3 = snake3;
 }
 
 void halves_wave_1_io(displayDirection_t dir_in)
@@ -468,10 +473,10 @@ void halves_wave_1_io(displayDirection_t dir_in)
     count = 0;
   }
   
-  CS.portWrite(0, snake0);
-  CS.portWrite(1, snake1);
-  CS.portWrite(2, snake2);
-  CS.portWrite(3, snake3);
+  port0 = snake0;
+  port1 = snake1;
+  port2 = snake2;
+  port3 = snake3;
 }
 
 void ping_pong_1_on(void)
@@ -575,8 +580,9 @@ void ping_pong_1_on(void)
     count = 0;
   }
   
-  CS.portWrite(0, snake0);
-  CS.portWrite(1, snake1);
-  CS.portWrite(2, snake2);
-  CS.portWrite(3, snake3);
+  port0 = snake0;
+  port1 = snake1;
+  port2 = snake2;
+  port3 = snake3;
 }
+

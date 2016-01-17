@@ -49,6 +49,10 @@ extern int global_x;
 extern int global_y;
 extern unsigned long programSwitchDebounce;
 extern int delay_modifier;
+extern unsigned int port0;
+extern unsigned int port1;
+extern unsigned int port2;
+extern unsigned int port3;
 
 //prototypes
 void BtnISR(void);
@@ -62,3 +66,4 @@ void halves_wave_1_io(displayDirection_t dir_in);
 void ping_pong_1_on();
 
 #endif
+

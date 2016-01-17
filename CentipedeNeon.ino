@@ -1,6 +1,7 @@
 // Works with Centipede Shield or MCP23017 on Arduino I2C port
 
 #include "CentipedeNeon.h"
+#include "CentipedeMidi.h"
 #include <Wire.h>
 #include <avr/io.h>
 #include <avr/interrupt.h>
@@ -18,7 +19,6 @@ volatile bool switch_programs = false;
 void setup()
 {
   Wire.begin(); // start I2C
-  MIDI_CREATE_DEFAULT_INSTANCE();
  
   CS.initialize(); // set all registers to default
  
@@ -115,35 +115,54 @@ void loop()
   {
     case ALL_BLINK:
       allblink();
+      active_channel = 1;
       break;
     case WAVE_X_ON_Y_OFF:
       wave(global_x, global_y, displayDirection);
+      active_channel = 2;
       break;
     case STEP_X_ON_Y_OFF:
       stepping(global_x, global_y, displayDirection);
+      active_channel = 3;
       break;
     case STACK:
       stack(displayDirection);
+      active_channel = 4;
       delay_modifier = -20;
       break;
     case RANDOM_X_ON:
       rand(global_x);
+      active_channel = 5;
       break;
     case HALVES_WAVE_1_ON_LR:
       halves_wave_1_lr(displayDirection);
+      active_channel = 6;
       break;
     case HALVES_WAVE_1_ON_IO:
       halves_wave_1_io(displayDirection);
+      active_channel = 7;
       break;
     case PING_PONG_1_ON:
       ping_pong_1_on();
+      active_channel = 8;
       break;
     case MAX_DISPLAY: //fall through
     default:
       active_program = ALL_BLINK;
       allblink();
+      active_channel = 1;
       break;
   }
+
+  //midi call
+  midi_sequence(port0, port1, port2, port3);
+
+  //send lights
+  CS.portWrite(0, port0);
+  CS.portWrite(1, port1);
+  CS.portWrite(2, port2);
+  CS.portWrite(3, port3);
+  
   delay(delay_ms + delay_modifier);
 }
 
