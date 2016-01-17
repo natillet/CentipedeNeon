@@ -19,6 +19,7 @@ volatile bool switch_programs = false;
 void setup()
 {
   Wire.begin(); // start I2C
+  midi_start();
  
   CS.initialize(); // set all registers to default
  
@@ -71,7 +72,7 @@ void loop()
 {
   //read ADC
   delay_ms = analogRead(ADC0);
-  delay_ms += 25; //don't let it go too fast
+  delay_ms += 100; //don't let it go too fast
   
   if (switch_programs)
   {

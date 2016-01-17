@@ -9,6 +9,7 @@ extern byte midi_state[MAX_LIGHTS];
 extern byte active_channel;
 
 //prototypes
+void midi_start();
 void midi_sequence(unsigned int port0, unsigned int port1, unsigned int port2, unsigned int port3);
 
 #endif

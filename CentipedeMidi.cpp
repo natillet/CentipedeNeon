@@ -6,7 +6,12 @@ MIDI_CREATE_DEFAULT_INSTANCE();
 byte midi_state[MAX_LIGHTS] = {0};
 byte prev_midi_state[MAX_LIGHTS] = {0};
 byte active_channel = 1;
-byte active_velocity = 127;
+byte active_velocity = 64;
+
+void midi_start()
+{
+  MIDI.begin();
+}
 
 void midi_sequence(unsigned int port0, unsigned int port1, unsigned int port2, unsigned int port3)
 {
@@ -37,5 +42,6 @@ void midi_sequence(unsigned int port0, unsigned int port1, unsigned int port2, u
       prev_midi_state[i] = midi_state[i];
     }
   }
+
 }
 
