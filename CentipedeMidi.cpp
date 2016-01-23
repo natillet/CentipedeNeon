@@ -36,19 +36,29 @@ void midi_sequence(unsigned int port0, unsigned int port1, unsigned int port2, u
     port3 = port3 >> 1;
   }
 
+  //first turn off all the notes that should end
   for (int i = 0; i < MAX_LIGHTS; i++)
   {
     if (prev_midi_state[i] != midi_state[i])
     {
-      if (midi_state[i] = 1)
-      {
-        MIDI.sendNoteOn(i+pitch_offset,active_velocity,active_channel);
-      }
-      else
+      if (0 == midi_state[i])
       {
         MIDI.sendNoteOff(i+pitch_offset,0,active_channel);
+        prev_midi_state[i] = midi_state[i];
       }
-      prev_midi_state[i] = midi_state[i];
+    }
+  }
+
+  //turn on all the notes that should be start
+  for (int i = 0; i < MAX_LIGHTS; i++)
+  {
+    if (prev_midi_state[i] != midi_state[i])
+    {
+      if (1 == midi_state[i])
+      {
+        MIDI.sendNoteOn(i+pitch_offset,active_velocity,active_channel);
+        prev_midi_state[i] = midi_state[i];
+      }
     }
   }
 
