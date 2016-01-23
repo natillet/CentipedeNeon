@@ -41,7 +41,6 @@ const int MAX_LIGHTS = 64;
 const int PROGRAM_SWITCH_DEBOUNCE = 500;
 
 //Globals
-extern Centipede CS; // create Centipede object
 extern int delay_ms;
 extern display_t active_program;
 extern displayDirection_t displayDirection;

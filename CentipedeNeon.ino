@@ -24,7 +24,8 @@ volatile int sw4_pos = 0;
 volatile int sw5_pos = 0;
 volatile int swLR_pos = 0;
 volatile bool switch_programs = false;
-CentipedeMidi CM;
+CentipedeMidi CM; // create Midi object
+Centipede CS; // create Centipede object
  
 void setup()
 {
@@ -69,7 +70,7 @@ void loop()
 {
   //read ADC
   delay_ms = analogRead(ADC0);
-  delay_ms += 100; //don't let it go too fast
+  delay_ms += 50; //don't let it go too fast
   
   if (switch_programs)
   {

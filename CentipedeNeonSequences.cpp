@@ -1,6 +1,5 @@
 #include "CentipedeNeon.h"
 
-Centipede CS; // create Centipede object
 int delay_ms = 100;
 display_t active_program = STACK;
 displayDirection_t displayDirection = RIGHT;
