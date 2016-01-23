@@ -91,6 +91,8 @@ void loop()
       }
       programSwitchDebounce = millis();
     }
+
+    midi_channel_switch();
   }
   
   //read non-program switches

@@ -7,10 +7,19 @@ byte midi_state[MAX_LIGHTS] = {0};
 byte prev_midi_state[MAX_LIGHTS] = {0};
 byte active_channel = 1;
 byte active_velocity = 64;
+const byte pitch_offset = 12;
 
 void midi_start()
 {
   MIDI.begin();
+}
+
+void midi_channel_switch()
+{
+  for (int i = 0; i < MAX_LIGHTS; i++)
+  {
+    MIDI.sendNoteOff(i+pitch_offset,0,active_channel);
+  }
 }
 
 void midi_sequence(unsigned int port0, unsigned int port1, unsigned int port2, unsigned int port3)
@@ -33,11 +42,11 @@ void midi_sequence(unsigned int port0, unsigned int port1, unsigned int port2, u
     {
       if (midi_state[i] = 1)
       {
-        MIDI.sendNoteOn(i,active_velocity,active_channel);
+        MIDI.sendNoteOn(i+pitch_offset,active_velocity,active_channel);
       }
       else
       {
-        MIDI.sendNoteOff(i,0,active_channel);
+        MIDI.sendNoteOff(i+pitch_offset,0,active_channel);
       }
       prev_midi_state[i] = midi_state[i];
     }
