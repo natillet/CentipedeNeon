@@ -1,4 +1,13 @@
-// Works with Centipede Shield or MCP23017 on Arduino I2C port
+// ************************************************************
+// CentipedeNeon is meant to control a set of 64 neon lights
+// using a Centipede Shield to expand the number of I/O lines
+// and a MIDI Shield to coordinate sounds with each light.
+// Arduino: Uno
+// Author: Elene Trull
+// Centipede Shield on Arduino I2C port (A4 & A5)
+//   http://docs.macetech.com/doku.php/centipede_shield
+// MIDI Shield on Arduino UART port (D0 & D1)
+// ************************************************************
 
 #include "CentipedeNeon.h"
 #include "CentipedeMidi.h"
@@ -15,11 +24,12 @@ volatile int sw4_pos = 0;
 volatile int sw5_pos = 0;
 volatile int swLR_pos = 0;
 volatile bool switch_programs = false;
+CentipedeMidi CM;
  
 void setup()
 {
   Wire.begin(); // start I2C
-  midi_start();
+  CM.midi_start();
  
   CS.initialize(); // set all registers to default
  
@@ -40,27 +50,14 @@ void setup()
 #endif //UPLOAD_FROM_ARDUINODROID
   
   //Switch Setup
-//  pinMode(SWITCH0, INPUT);
-//  pinMode(SWITCH1, INPUT);
-//  pinMode(SWITCH2, INPUT);
   pinMode(SWITCH3, INPUT);
   pinMode(SWITCH4, INPUT);
   pinMode(SWITCH5, INPUT);
   pinMode(SWITCH_LR, INPUT);
-//  digitalWrite(SWITCH0, HIGH);
-//  digitalWrite(SWITCH1, HIGH);
-//  digitalWrite(SWITCH2, HIGH);
   digitalWrite(SWITCH3, HIGH);
   digitalWrite(SWITCH4, HIGH);
   digitalWrite(SWITCH5, HIGH);
   digitalWrite(SWITCH_LR, HIGH);
-  
-//  //read program switches
-//  sw0_pos = digitalRead(SWITCH0);
-//  sw1_pos = digitalRead(SWITCH1);
-//  sw2_pos = digitalRead(SWITCH2);
-  
-//  active_program = (display_t)((sw2_pos << 2) | (sw1_pos << 1) | sw0_pos);
   
   programSwitchDebounce = millis();
   
@@ -92,7 +89,7 @@ void loop()
       programSwitchDebounce = millis();
     }
 
-    midi_channel_switch();
+    CM.midi_channel_switch();
   }
   
   //read non-program switches
@@ -118,47 +115,47 @@ void loop()
   {
     case ALL_BLINK:
       allblink();
-      active_channel = 1;
+      CM.active_channel = 1;
       break;
     case WAVE_X_ON_Y_OFF:
       wave(global_x, global_y, displayDirection);
-      active_channel = 2;
+      CM.active_channel = 2;
       break;
     case STEP_X_ON_Y_OFF:
       stepping(global_x, global_y, displayDirection);
-      active_channel = 3;
+      CM.active_channel = 3;
       break;
     case STACK:
       stack(displayDirection);
-      active_channel = 4;
+      CM.active_channel = 4;
       delay_modifier = -20;
       break;
     case RANDOM_X_ON:
       rand(global_x);
-      active_channel = 5;
+      CM.active_channel = 5;
       break;
     case HALVES_WAVE_1_ON_LR:
       halves_wave_1_lr(displayDirection);
-      active_channel = 6;
+      CM.active_channel = 6;
       break;
     case HALVES_WAVE_1_ON_IO:
       halves_wave_1_io(displayDirection);
-      active_channel = 7;
+      CM.active_channel = 7;
       break;
     case PING_PONG_1_ON:
       ping_pong_1_on();
-      active_channel = 8;
+      CM.active_channel = 8;
       break;
     case MAX_DISPLAY: //fall through
     default:
       active_program = ALL_BLINK;
       allblink();
-      active_channel = 1;
+      CM.active_channel = 1;
       break;
   }
 
   //midi call
-  midi_sequence(port0, port1, port2, port3);
+  CM.midi_sequence(port0, port1, port2, port3);
 
   //send lights
   CS.portWrite(0, port0);

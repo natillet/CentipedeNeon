@@ -5,13 +5,21 @@
 #include <MIDI.h>
 #include "CentipedeNeon.h"
 
-extern byte midi_state[MAX_LIGHTS];
-extern byte active_channel;
+class CentipedeMidi
+{
+  private:
+    byte midi_state[MAX_LIGHTS] = {0};
+    byte prev_midi_state[MAX_LIGHTS] = {0};
+    byte active_velocity = 64;
+    const byte pitch_offset = 12;
 
-//prototypes
-void midi_start();
-void midi_channel_switch();
-void midi_sequence(unsigned int port0, unsigned int port1, unsigned int port2, unsigned int port3);
+  public:
+    byte active_channel = 1;
+    CentipedeMidi();
+    void midi_start();
+    void midi_channel_switch();
+    void midi_sequence(unsigned int port0, unsigned int port1, unsigned int port2, unsigned int port3);
+};
 
 #endif
 

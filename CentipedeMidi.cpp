@@ -3,18 +3,17 @@
 
 MIDI_CREATE_DEFAULT_INSTANCE();
 
-byte midi_state[MAX_LIGHTS] = {0};
-byte prev_midi_state[MAX_LIGHTS] = {0};
-byte active_channel = 1;
-byte active_velocity = 64;
-const byte pitch_offset = 12;
+CentipedeMidi::CentipedeMidi()
+{
+//  MIDI_CREATE_DEFAULT_INSTANCE();
+}
 
-void midi_start()
+void CentipedeMidi::midi_start()
 {
   MIDI.begin();
 }
 
-void midi_channel_switch()
+void CentipedeMidi::midi_channel_switch()
 {
   for (int i = 0; i < MAX_LIGHTS; i++)
   {
@@ -22,7 +21,7 @@ void midi_channel_switch()
   }
 }
 
-void midi_sequence(unsigned int port0, unsigned int port1, unsigned int port2, unsigned int port3)
+void CentipedeMidi::midi_sequence(unsigned int port0, unsigned int port1, unsigned int port2, unsigned int port3)
 {
   for(int i = 0; i < 16; i++)
   {
