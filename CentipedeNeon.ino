@@ -79,19 +79,15 @@ void loop()
     
     if ((timeSinceLastSwitch > PROGRAM_SWITCH_DEBOUNCE) || (timeSinceLastSwitch < 0))
     {
-      if (ALL_BLINK == active_program)  //skip all blink
-      {
-        active_program = (display_t)(((int)active_program) + 1);
-      }
-      
-      if (active_program < MAX_DISPLAY)
+      if (active_program < MAX_DISPLAY-1)
       {
         active_program = (display_t)(((int)active_program) + 1);
       }
       else
       {
-        active_program = (display_t)0;
+        active_program = (display_t)1;  //skip all blink
       }
+      
       
       programSwitchDebounce = millis();
     }
@@ -155,7 +151,7 @@ void loop()
       break;
     case MAX_DISPLAY: //fall through
     default:
-      active_program = ALL_BLINK;
+      active_program = WAVE_X_ON_Y_OFF; //ALL_BLINK;  //skip all blink
       allblink();
       CM.active_channel = 1;
       break;
