@@ -79,6 +79,11 @@ void loop()
     
     if ((timeSinceLastSwitch > PROGRAM_SWITCH_DEBOUNCE) || (timeSinceLastSwitch < 0))
     {
+      if (ALL_BLINK == active_program)  //skip all blink
+      {
+        active_program = (display_t)(((int)active_program) + 1);
+      }
+      
       if (active_program < MAX_DISPLAY)
       {
         active_program = (display_t)(((int)active_program) + 1);
@@ -87,6 +92,7 @@ void loop()
       {
         active_program = (display_t)0;
       }
+      
       programSwitchDebounce = millis();
     }
 
