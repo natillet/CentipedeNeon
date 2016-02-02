@@ -85,7 +85,7 @@ void loop()
       }
       else
       {
-        active_program = (display_t)1;  //skip all blink
+        active_program = (display_t)0;
       }
       
       
