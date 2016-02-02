@@ -119,10 +119,16 @@ void loop()
       CM.active_channel = 1;
       break;
     case WAVE_X_ON_Y_OFF:
+      global_x = 8;  //hardcoding for music
+      global_y = 4;  //hardcoding for music
+      displayDirection = LEFT;  //hardcoding for music
       wave(global_x, global_y, displayDirection);
       CM.active_channel = 2;
       break;
     case STEP_X_ON_Y_OFF:
+      global_x = 8;  //hardcoding for music
+      global_y = 4;  //hardcoding for music
+      displayDirection = LEFT;  //hardcoding for music
       stepping(global_x, global_y, displayDirection);
       CM.active_channel = 3;
       break;
