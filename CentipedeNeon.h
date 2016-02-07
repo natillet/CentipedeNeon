@@ -58,7 +58,7 @@ void BtnISR(void);
 void allblink();  //suggest remove
 void wave(int x_in, int y_in, displayDirection_t dir_in);
 void stepping(int x_in, int y_in, displayDirection_t dir_in);  //suggest remove
-void stack(displayDirection_t dir_in);
+void stack(displayDirection_t dir_in, bool reset);
 void rand(int x_in);
 void halves_wave_1_lr(displayDirection_t dir_in);
 void halves_wave_1_io(displayDirection_t dir_in);

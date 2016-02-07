@@ -26,6 +26,7 @@ volatile int swLR_pos = 0;
 volatile bool switch_programs = false;
 CentipedeMidi CM; // create Midi object
 Centipede CS; // create Centipede object
+bool reset_program = false;
  
 void setup()
 {
@@ -87,12 +88,15 @@ void loop()
       {
         active_program = (display_t)0;
       }
-      
+
+      //clear the channel since we're going to a different channel
+      CM.midi_channel_switch();
+      //enable program reset so programs like stack can start fresh
+      reset_program = true;
       
       programSwitchDebounce = millis();
     }
 
-    CM.midi_channel_switch();
   }
   
   //read non-program switches
@@ -135,7 +139,7 @@ void loop()
       CM.active_channel = 3;
       break;
     case STACK:
-      stack(displayDirection);
+      stack(displayDirection, reset_program);
       CM.active_channel = 4;
       delay_modifier = -20;
       break;
@@ -162,6 +166,8 @@ void loop()
       CM.active_channel = 1;
       break;
   }
+
+  reset_program = false;
 
   //midi call
   CM.midi_sequence(port0, port1, port2, port3);

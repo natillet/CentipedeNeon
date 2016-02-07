@@ -193,7 +193,7 @@ void stepping(int x_in, int y_in, displayDirection_t dir_in)
   port3 = snake3;
 }
 
-void stack(displayDirection_t dir_in)
+void stack(displayDirection_t dir_in, bool reset)
 {
   static unsigned long long snake = 0;
   static unsigned long long snake_slider = 0;
@@ -206,7 +206,7 @@ void stack(displayDirection_t dir_in)
   unsigned int snake1 = 0;
   unsigned int snake2 = 0;
   unsigned int snake3 = 0;
-  if (dir != dir_in)
+  if ((dir != dir_in) || reset)
   {
     dir = dir_in;
     //reset snake so it doesn't look wonky
