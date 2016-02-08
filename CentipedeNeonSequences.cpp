@@ -211,6 +211,8 @@ void stack(displayDirection_t dir_in)
     dir = dir_in;
     //reset snake so it doesn't look wonky
     snake = 0;
+    snake_slider = 0;
+    snake_stack = 0;
     slide = 63;
     level = 0;
   }
