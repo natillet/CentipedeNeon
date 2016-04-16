@@ -100,8 +100,8 @@ void loop()
     switch_programs = false;
     long long timeSinceLastSwitch = millis() - programSwitchDebounce;
     
-//    if ((timeSinceLastSwitch > PROGRAM_SWITCH_DEBOUNCE) || (timeSinceLastSwitch < 0))
-//    {
+    if ((timeSinceLastSwitch > PROGRAM_SWITCH_DEBOUNCE) || (timeSinceLastSwitch < 0))
+    {
       if (active_program < MAX_DISPLAY-1)
       {
         active_program = (display_t)(((int)active_program) + 1);
@@ -117,7 +117,7 @@ void loop()
       reset_program = true;
       
       programSwitchDebounce = millis();
-//    }
+    }
 
   }
   
