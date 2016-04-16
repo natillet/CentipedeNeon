@@ -27,6 +27,11 @@ volatile bool switch_programs = false;
 CentipedeMidi CM; // create Midi object
 Centipede CS; // create Centipede object
 bool reset_program = false;
+const int MINUTES_TO_NEXT_SEQUENCE = 7;
+const unsigned long MILLIS_TO_NEXT_SEQUENCE = (unsigned long)(1000 * 60 * MINUTES_TO_NEXT_SEQUENCE); //millis to seconds to minutes
+unsigned long last_sequence_start_time = 0UL;
+const int BIG_NUMBER = 64*16;
+int countdown = BIG_NUMBER;
  
 void setup()
 {
@@ -62,6 +67,7 @@ void setup()
   digitalWrite(SWITCH_LR, HIGH);
   
   programSwitchDebounce = millis();
+  last_sequence_start_time = programSwitchDebounce;
   
   sei();                  //Enable global interrupts
 }
@@ -72,14 +78,30 @@ void loop()
   //read ADC
   delay_ms = analogRead(ADC0);
   delay_ms += 50; //don't let it go too fast
+
+//  unsigned long current_time = millis();
+//  if ((unsigned long)(current_time - last_sequence_start_time) >= (unsigned long)MILLIS_TO_NEXT_SEQUENCE)
+//  {
+//    last_sequence_start_time = current_time;
+//    switch_programs = true;
+//  }
+  if (countdown <= 1)
+  {
+    switch_programs = true;
+    countdown = BIG_NUMBER;
+  }
+  else
+  {
+    countdown--;
+  }
   
   if (switch_programs)
   {
     switch_programs = false;
     long long timeSinceLastSwitch = millis() - programSwitchDebounce;
     
-    if ((timeSinceLastSwitch > PROGRAM_SWITCH_DEBOUNCE) || (timeSinceLastSwitch < 0))
-    {
+//    if ((timeSinceLastSwitch > PROGRAM_SWITCH_DEBOUNCE) || (timeSinceLastSwitch < 0))
+//    {
       if (active_program < MAX_DISPLAY-1)
       {
         active_program = (display_t)(((int)active_program) + 1);
@@ -95,7 +117,7 @@ void loop()
       reset_program = true;
       
       programSwitchDebounce = millis();
-    }
+//    }
 
   }
   
@@ -185,7 +207,7 @@ void loop()
 // Interrupt Service Routine attached to INT0 vector
 void BtnISR(void)
 {
-  switch_programs = true;
+  //switch_programs = true;
 }
 
 
