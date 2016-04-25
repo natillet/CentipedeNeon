@@ -215,6 +215,7 @@ void stack(displayDirection_t dir_in)
     snake_stack = 0;
     slide = 63;
     level = 0;
+    sliding = false;
   }
   
   if (sliding)
