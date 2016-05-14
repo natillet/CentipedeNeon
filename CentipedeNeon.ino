@@ -44,11 +44,7 @@ void setup()
   //Button/Interrupt Setup
   pinMode(BTN, INPUT);
   digitalWrite(BTN, HIGH);
-#ifdef UPLOAD_FROM_ARDUINODROID
-  attachInterrupt(1, BtnISR, FALLING);
-#else
-  attachInterrupt(digitalPinToInterrupt(BTN), BtnISR, FALLING);
-#endif //UPLOAD_FROM_ARDUINODROID
+
   
   //Switch Setup
   pinMode(SWITCH3, INPUT);
@@ -75,19 +71,14 @@ void loop()
   if (switch_programs)
   {
     switch_programs = false;
-    long long timeSinceLastSwitch = millis() - programSwitchDebounce;
-    
-    if ((timeSinceLastSwitch > PROGRAM_SWITCH_DEBOUNCE) || (timeSinceLastSwitch < 0))
+
+    if (active_program < MAX_DISPLAY)
     {
-      if (active_program < MAX_DISPLAY)
-      {
-        active_program = (display_t)(((int)active_program) + 1);
-      }
-      else
-      {
-        active_program = (display_t)0;
-      }
-      programSwitchDebounce = millis();
+      active_program = (display_t)(((int)active_program) + 1);
+    }
+    else
+    {
+      active_program = (display_t)0;
     }
 
     CM.midi_channel_switch();
@@ -115,48 +106,48 @@ void loop()
   switch(active_program)
   {
     case ALL_BLINK:
-      allblink();
+      switch_programs = allblink();
       CM.active_channel = 1;
       break;
     case WAVE_X_ON_Y_OFF:
       global_x = 8;  //hardcoding for music
       global_y = 4;  //hardcoding for music
       displayDirection = LEFT;  //hardcoding for music
-      wave(global_x, global_y, displayDirection);
+      switch_programs = wave(global_x, global_y, displayDirection);
       CM.active_channel = 2;
       break;
     case STEP_X_ON_Y_OFF:
       global_x = 8;  //hardcoding for music
       global_y = 4;  //hardcoding for music
       displayDirection = LEFT;  //hardcoding for music
-      stepping(global_x, global_y, displayDirection);
+      switch_programs = stepping(global_x, global_y, displayDirection);
       CM.active_channel = 3;
       break;
     case STACK:
-      stack(displayDirection);
+      switch_programs = stack(displayDirection);
       CM.active_channel = 4;
       delay_modifier = -20;
       break;
     case RANDOM_X_ON:
-      rand(global_x);
+      switch_programs = rand(global_x);
       CM.active_channel = 5;
       break;
     case HALVES_WAVE_1_ON_LR:
-      halves_wave_1_lr(displayDirection);
+      switch_programs = halves_wave_1_lr(displayDirection);
       CM.active_channel = 6;
       break;
     case HALVES_WAVE_1_ON_IO:
-      halves_wave_1_io(displayDirection);
+      switch_programs = halves_wave_1_io(displayDirection);
       CM.active_channel = 7;
       break;
     case PING_PONG_1_ON:
-      ping_pong_1_on();
+      switch_programs = ping_pong_1_on();
       CM.active_channel = 8;
       break;
     case MAX_DISPLAY: //fall through
     default:
       active_program = ALL_BLINK;
-      allblink();
+      switch_programs = allblink();
       CM.active_channel = 1;
       break;
   }
@@ -172,12 +163,4 @@ void loop()
   
   delay(delay_ms + delay_modifier);
 }
-
-//// BUTTON INTERRUPT ////
-// Interrupt Service Routine attached to INT0 vector
-void BtnISR(void)
-{
-  switch_programs = true;
-}
-
 

@@ -54,15 +54,14 @@ extern unsigned int port2;
 extern unsigned int port3;
 
 //prototypes
-void BtnISR(void);
-void allblink();  //suggest remove
-void wave(int x_in, int y_in, displayDirection_t dir_in);
-void stepping(int x_in, int y_in, displayDirection_t dir_in);  //suggest remove
-void stack(displayDirection_t dir_in);
-void rand(int x_in);
-void halves_wave_1_lr(displayDirection_t dir_in);
-void halves_wave_1_io(displayDirection_t dir_in);
-void ping_pong_1_on();
+bool allblink();  //suggest remove
+bool wave(int x_in, int y_in, displayDirection_t dir_in);
+bool stepping(int x_in, int y_in, displayDirection_t dir_in);  //suggest remove
+bool stack(displayDirection_t dir_in);
+bool rand(int x_in);
+bool halves_wave_1_lr(displayDirection_t dir_in);
+bool halves_wave_1_io(displayDirection_t dir_in);
+bool ping_pong_1_on();
 
 #endif
 

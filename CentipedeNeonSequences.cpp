@@ -7,6 +7,7 @@ int global_x = 6;
 int global_y = 2;
 unsigned long programSwitchDebounce = 0;
 int delay_modifier = 0;
+const int change_cycles = 1680; //60s/min * 4min * 7changes/s = 4min of changes
 
 unsigned int port0 = 0;
 unsigned int port1 = 0;
@@ -14,8 +15,10 @@ unsigned int port2 = 0;
 unsigned int port3 = 0;
 
 //// DISPLAY PROGRAMS ////
-void allblink(void)
+bool allblink(void)
 {
+  static bool complete = false;
+  static unsigned int cycles = 0;
   static bool turnOn = true;
   if (turnOn)
   {
@@ -33,10 +36,28 @@ void allblink(void)
     port3 = 0;
     turnOn = true;
   }
+  cycles++;
+  if (cycles >= change_cycles)
+  {
+    cycles = 0;
+    complete = true;
+  }
+
+  if (complete)
+  {
+    complete = false;
+    return true;
+  }
+  else
+  {
+    return complete;
+  }
 }
 
-void wave(int x_in, int y_in, displayDirection_t dir_in)
+bool wave(int x_in, int y_in, displayDirection_t dir_in)
 {
+  static bool complete = false;
+  static unsigned int cycles = 0;
   static unsigned int snake0 = 0;
   static unsigned int snake1 = 0;
   static unsigned int snake2 = 0;
@@ -123,10 +144,29 @@ void wave(int x_in, int y_in, displayDirection_t dir_in)
   port1 = snake1;
   port2 = snake2;
   port3 = snake3;
+  
+  cycles++;
+  if (cycles >= change_cycles)
+  {
+    cycles = 0;
+    complete = true;
+  }
+
+  if (complete)
+  {
+    complete = false;
+    return true;
+  }
+  else
+  {
+    return complete;
+  }
 }
 
-void stepping(int x_in, int y_in, displayDirection_t dir_in)
+bool stepping(int x_in, int y_in, displayDirection_t dir_in)
 {
+  static bool complete = false;
+  static unsigned int cycles = 0;
   static unsigned int snake0 = 0;
   static unsigned int snake1 = 0;
   static unsigned int snake2 = 0;
@@ -191,9 +231,26 @@ void stepping(int x_in, int y_in, displayDirection_t dir_in)
   port1 = snake1;
   port2 = snake2;
   port3 = snake3;
+  
+  cycles++;
+  if (cycles >= change_cycles)
+  {
+    cycles = 0;
+    complete = true;
+  }
+
+  if (complete)
+  {
+    complete = false;
+    return true;
+  }
+  else
+  {
+    return complete;
+  }
 }
 
-void stack(displayDirection_t dir_in)
+bool stack(displayDirection_t dir_in)
 {
   static unsigned long long snake = 0;
   static unsigned long long snake_slider = 0;
@@ -274,10 +331,21 @@ void stack(displayDirection_t dir_in)
   port1 = snake1;
   port2 = snake2;
   port3 = snake3;
+
+  if (((LEFT == dir) && (0x0FFFF == snake3)) || ((RIGHT == dir) && (0x0FFFF == snake0)))
+  {
+    return true;
+  }
+  else
+  {
+    return false;
+  }
 }
 
-void rand(int x_in)
+bool rand(int x_in)
 {
+  static bool complete = false;
+  static unsigned int cycles = 0;
   int snake_temp = 0;
   int snake0 = 0;
   int snake1 = 0;
@@ -311,10 +379,29 @@ void rand(int x_in)
   port1 = snake1;
   port2 = snake2;
   port3 = snake3;
+  
+  cycles++;
+  if (cycles >= change_cycles)
+  {
+    cycles = 0;
+    complete = true;
+  }
+
+  if (complete)
+  {
+    complete = false;
+    return true;
+  }
+  else
+  {
+    return complete;
+  }
 }
 
-void halves_wave_1_lr(displayDirection_t dir_in)
+bool halves_wave_1_lr(displayDirection_t dir_in)
 {
+  static bool complete = false;
+  static unsigned int cycles = 0;
   static int count = 0;
   static const int half = MAX_LIGHTS >> 1;  //divide MAX_LIGHTS in half
   static const int quarter = MAX_LIGHTS >> 2;  //divide MAX_LIGHTS in quarter
@@ -395,10 +482,29 @@ void halves_wave_1_lr(displayDirection_t dir_in)
   port1 = snake1;
   port2 = snake2;
   port3 = snake3;
+  
+  cycles++;
+  if ((cycles >= change_cycles) && (1 == port0))
+  {
+    cycles = 0;
+    complete = true;
+  }
+
+  if (complete)
+  {
+    complete = false;
+    return true;
+  }
+  else
+  {
+    return complete;
+  }
 }
 
-void halves_wave_1_io(displayDirection_t dir_in)
+bool halves_wave_1_io(displayDirection_t dir_in)
 {
+  static bool complete = false;
+  static unsigned int cycles = 0;
   static int count = 0;
   static const int half = MAX_LIGHTS >> 1;  //divide MAX_LIGHTS in half
   static const int quarter = MAX_LIGHTS >> 2;  //divide MAX_LIGHTS in quarter
@@ -479,10 +585,29 @@ void halves_wave_1_io(displayDirection_t dir_in)
   port1 = snake1;
   port2 = snake2;
   port3 = snake3;
+  
+  cycles++;
+  if ((cycles >= change_cycles) && (1 == port0))
+  {
+    cycles = 0;
+    complete = true;
+  }
+
+  if (complete)
+  {
+    complete = false;
+    return true;
+  }
+  else
+  {
+    return complete;
+  }
 }
 
-void ping_pong_1_on(void)
+bool ping_pong_1_on(void)
 {
+  static bool complete = false;
+  static unsigned int cycles = 0;
   static int count = 0;
   static const int half = MAX_LIGHTS >> 1;  //divide MAX_LIGHTS in half
   static const int quarter = MAX_LIGHTS >> 2;  //divide MAX_LIGHTS in quarter
@@ -586,5 +711,22 @@ void ping_pong_1_on(void)
   port1 = snake1;
   port2 = snake2;
   port3 = snake3;
+  
+  cycles++;
+  if ((cycles >= change_cycles) && (1 == port0))
+  {
+    cycles = 0;
+    complete = true;
+  }
+
+  if (complete)
+  {
+    complete = false;
+    return true;
+  }
+  else
+  {
+    return complete;
+  }
 }
 
