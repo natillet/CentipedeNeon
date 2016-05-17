@@ -332,7 +332,7 @@ bool stack(displayDirection_t dir_in)
   port2 = snake2;
   port3 = snake3;
 
-  if (((LEFT == dir) && (0x0FFFF == snake3)) || ((RIGHT == dir) && (0x0FFFF == snake0)))
+  if (((LEFT == dir) && (0x0FFFF == snake0)) || ((RIGHT == dir) && (0x0FFFF == snake3)))
   {
     return true;
   }
